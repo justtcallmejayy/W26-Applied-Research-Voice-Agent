@@ -2,11 +2,11 @@
 
 ### Basic architecture (end-to-end)
 
-![Basic architecture](docs/diagrams/basic_architecture_diagram.drawio.png)
+![Basic architecture](docs/diagrams/basic_architecture_diagram.drawio.png) coming soon
 
 ### Detailed architecture (internal components)
 
-![Detailed architecture](docs/diagrams/detailed_architecture_diagram_v1.png)
+![Detailed architecture](docs/diagrams/detailed_architecture_diagram_v1.png) coming soon
 
 # System Architecture Notes
 
