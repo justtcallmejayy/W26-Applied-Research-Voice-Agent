@@ -28,6 +28,34 @@ Voice Agent for Candidate Onboarding &amp; Career Guidance (Applied Research 1, 
 
 ---
 
+## Current Pipeline
+
+1. Record Audio 
+    - Capture users voice from microphone on their computer (5 seconds)
+    - Store as a numpy array in memory
+2. Save to a temporary file 
+    - Convert audio data to a .WAV file 
+    - Save to a temporary location local on disk
+3. Transcribe the audio
+    - Send the .WAV file to OpenAI Whisper API 
+    - Receibe text transcription back from OpenAI
+4. Generate Response 
+    - Send transcribed text back to OpenAI GPT model 
+    - AI processes and generates a reply 
+5. Text to Speech 
+    - Send model response to OpenAI TTS API 
+    - Receive .MP3 audio file back as response 
+    - Save to temporary location locally 
+6. Play Audio
+    - Load .MP3 audio file into pygame mixer 
+    - Play audio through users computer speakers 
+    - Wait until playback completes 
+7. Cleanup 
+    - Delete temporary .WAV file storing the recorded audio
+    - Delete the temporary .MP3 audio file containing the TTS response
+
+---
+
 ## Project Structure
 ```bash
 W26-Applied-Research-Voice-Agent/
