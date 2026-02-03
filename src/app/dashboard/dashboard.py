@@ -3,7 +3,7 @@
 """
 src.app.dashboard.dashboard
 
-
+The core dashboard module for the 
 """
 
 import streamlit as st
@@ -20,18 +20,17 @@ logging.basicConfig(
 )
 
 
+# Configuration
 st.set_page_config(
     page_title="AI Voice Assistant",
     layout="wide"
 )
-
 
 # Dashboard title
 st.title("AI Voice Assistant Dashboard")
 
 # Sidebar header
 st.sidebar.header("Settings")
-
 
 # Footer
 st.caption("Applied Research W26")

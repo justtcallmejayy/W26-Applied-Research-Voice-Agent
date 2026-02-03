@@ -3,8 +3,12 @@
 """
 src.app.agent.voice_agent
 
-"""
+Defines the VoiceAgent class, which implements a voice based conversational agent for applied research.
+It supports end to end voice interaction by recording audio from the users microphone, transcribing speech to text, generating a response using a LLM,
+converting text to synthesized speech, and playing audio output to the user.
 
+This module relies on external services for speech to text, text generation, and text to speech, and assumes the presence of functional audio input and output devices on the users system.
+"""
 
 import logging
 import sounddevice as sd
@@ -28,6 +32,7 @@ class VoiceAgent:
         self.client = client
         self.recording_duration = recording_duration
         self.sample_rate = sample_rate
+        self.conversation_history = []
 
 
     def record_audio(self):
@@ -116,25 +121,43 @@ class VoiceAgent:
             str: The generated response text from the language model.
         """
         logging.info("Generating response...")
+
+        # Add user input to conversation history
+        self.conversation_history.append({
+            "role": "user",
+            "content": user_input
+        })
+
+        # Build list of messages for chat completion
+        messages = [
+            {
+                "role": "system",
+                "content": "You are a helpful onboarding voice assistant. Keep responses concise and conversational."
+            }
+        ] + self.conversation_history
+
         response = self.client.chat.completions.create(
             model="gpt-4",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are a helpful voice assistant. Keep responses concise and conversational."
-                },
-                {
-                    "role": "user",
-                    "content": user_input
-                }
-            ],
+            messages=messages,
             max_tokens=150,
             temperature=0.7,
             presence_penalty=0.5,
             frequency_penalty=0.2
         )
-        
         ai_response = response.choices[0].message.content
+
+        # Add model response to conversation history
+        self.conversation_history.append({
+            "role": "assistant",
+            "content": ai_response
+        })
+
+        # Limit conversation history to last 8 messages
+        max_messages = 8
+        if (len(self.conversation_history) > max_messages):
+            self.conversation_history = self.conversation_history[-max_messages:]
+            logging.info("Trimming conversation history to last 8 messages")
+
         logging.info(f"Assistant Response: '{ai_response}'")
         return ai_response
 
@@ -201,3 +224,21 @@ class VoiceAgent:
         except Exception as e:
             logging.warning(f"Could not delete {filepath} : {e}")
 
+
+    def start_onboarding(self):
+        """
+        Initates the onboarding conversation with a greeting and prompts the user for their name.
+        """
+        greeting = "Hi! Welcome to onboarding. Whats your name?"
+        logging.info(f"Assistant Greeting: '{greeting}'")
+
+        # Convert greeting to speech and play
+        speech_filepath = self.text_to_speech(greeting)
+        self.play_audio(speech_filepath)
+        self.cleanup_file(speech_filepath)
+
+        # Add to convo history to maintain context
+        self.conversation_history.append({
+            "role": "assistant",
+            "content": greeting
+        })
