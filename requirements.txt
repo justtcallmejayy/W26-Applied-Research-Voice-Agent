@@ -1,0 +1,18 @@
+
+# Voice Agent Prototype Dependencies
+# Last updated: Febuary 2, 2026
+
+# Dashboard
+streamlit==1.53.0
+
+# Config
+python-dotenv==1.1.0
+
+# Audio Processing
+sounddevice==0.5.1
+soundfile==0.13.1
+pygame==2.5.2
+numpy==1.26.4
+
+# Core API Clients
+openai==1.75.0
