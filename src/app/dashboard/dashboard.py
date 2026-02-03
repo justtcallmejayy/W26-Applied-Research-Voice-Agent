@@ -25,4 +25,13 @@ st.set_page_config(
     layout="wide"
 )
 
+
+# Dashboard title
 st.title("AI Voice Assistant Dashboard")
+
+# Sidebar header
+st.sidebar.header("Settings")
+
+
+# Footer
+st.caption("Applied Research W26")

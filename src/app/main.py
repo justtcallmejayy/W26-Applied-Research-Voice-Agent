@@ -18,7 +18,7 @@ logging.basicConfig(
     format='[%(levelname)s] %(filename)s:%(lineno)d - %(funcName)s() - %(message)s',
     handlers=[
         logging.FileHandler('src/app/logs/app.log'), # to file
-        logging.StreamHandler()              # to console
+        logging.StreamHandler()                      # to console
     ]
 )
 

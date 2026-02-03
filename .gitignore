@@ -7,3 +7,6 @@ logs/
 
 ### Python Cache
 __pycache__/
+
+### Virtual Envrionment
+venv/
