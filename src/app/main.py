@@ -11,6 +11,7 @@ import logging
 from dotenv import load_dotenv
 from openai import OpenAI
 from agent.voice_agent import VoiceAgent
+from agent.local_voice_agent import LocalVoiceAgent
 
 # Initialize logging to file and console
 logging.basicConfig(
@@ -32,9 +33,17 @@ def main():
     print("VOICE ASSISTANT PROTOTYPE")
     print("=" * 50)
 
-    # Could change the recording_duration, sample_rate as those are the params it takes
-    # we could also change the client from openai if it works with the class
-    agent = VoiceAgent(client=client)
+    # Change to True/False depending on choice of local vs cloud agent
+    USE_LOCAL = True
+
+    if USE_LOCAL:
+        logging.info("Using LocalVoiceAgent")
+        agent = LocalVoiceAgent()
+    else:
+        # Could change the recording_duration, sample_rate as those are the params it takes
+        # we could also change the client from openai if it works with the class
+        logging.info("Using VoiceAgent with OpenAI client")
+        agent = VoiceAgent(client=client)
 
     try:
         # Start onboarding interaction
