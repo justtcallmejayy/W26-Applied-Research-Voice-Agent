@@ -1,6 +1,6 @@
 
 # Voice Agent Prototype Dependencies
-# Last updated: Febuary 2, 2026
+# Last updated: Febuary 4, 2026
 
 # Dashboard
 streamlit==1.53.0
@@ -16,3 +16,6 @@ numpy==1.26.4
 
 # Core API Clients
 openai==1.75.0
+gtts==2.5.4
+openai-whisper==20250625
+

@@ -1,0 +1,173 @@
+
+import logging
+import sounddevice as sd
+import soundfile as sf
+import tempfile
+import pygame
+import os
+import requests
+import whisper
+from gtts import gTTS
+
+class LocalVoiceAgent:
+
+    def __init__(self, recording_duration=5, sample_rate=16000, whisper_model="base", ollama_model="gemma3:1b"):
+        self.recording_duration = recording_duration
+        self.sample_rate = sample_rate
+        self.conversation_history = []
+        logging.info("Initializing local models...")
+        
+        # Load Whisper
+        logging.info(f"Loading Whisper model: {whisper_model}")
+        self.whisper = whisper.load_model(whisper_model)
+        
+        # Check Ollama
+        logging.info("Checking Ollama connection...")
+        self.ollama_model = ollama_model
+        self.ollama_url = "http://localhost:11434/api/chat"
+        self._check_ollama()
+        
+        logging.info("Using gTTS for text-to-speech")
+        logging.info("All local models ready!")
+    
+    def _check_ollama(self):
+        try:
+            response = requests.get("http://localhost:11434/api/tags", timeout=5)
+            response.raise_for_status()
+            
+            models = response.json().get("models", [])
+            model_names = [m["name"] for m in models]
+            
+            if self.ollama_model not in model_names:
+                logging.warning(f"Model {self.ollama_model} not found. Available: {model_names}")
+                if models:
+                    self.ollama_model = models[0]["name"]
+                    logging.info(f"Using {self.ollama_model} instead")
+                else:
+                    raise RuntimeError("No Ollama models found. Run: ollama pull llama3.2")
+                    
+        except requests.exceptions.RequestException as e:
+            raise RuntimeError(
+                f"Cannot connect to Ollama: {e}\n"
+                "Make sure Ollama is running: ollama serve"
+            )
+
+    def record_audio(self):
+        logging.info(f"Recording for {self.recording_duration} seconds... Speak now!")
+        audio_data = sd.rec(
+            int(self.recording_duration * self.sample_rate),
+            samplerate=self.sample_rate,
+            channels=1,
+            dtype='float32'
+        )
+        sd.wait()
+        logging.info("Recording complete!")
+        return audio_data
+
+    def save_audio(self, audio_data):
+        logging.info("Creating temporary file")
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
+        filepath = temp_file.name
+        temp_file.close()
+        sf.write(filepath, audio_data, self.sample_rate)
+        return filepath
+
+    def transcribe_audio(self, audio_filepath):
+        logging.info("Transcribing audio with local Whisper...")
+        
+        result = self.whisper.transcribe(audio_filepath)
+        transcript = result["text"].strip()
+        
+        logging.info(f"You said: '{transcript}'")
+        return transcript
+
+    def generate_response(self, user_input):
+        logging.info(f"Generating response with local {self.ollama_model}...")
+        
+        self.conversation_history.append({
+            "role": "user",
+            "content": user_input
+        })
+        
+        messages = [
+            {
+                "role": "system",
+                "content": "You are a helpful onboarding voice assistant. Keep responses concise and conversational."
+            }
+        ] + self.conversation_history
+        
+        try:
+            response = requests.post(
+                self.ollama_url,
+                json={
+                    "model": self.ollama_model,
+                    "messages": messages,
+                    "stream": False
+                },
+                timeout=30
+            )
+            response.raise_for_status()
+            ai_response = response.json()["message"]["content"]
+            
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Ollama error: {e}")
+            raise RuntimeError("Ollama not responding. Is it running?")
+        
+        self.conversation_history.append({
+            "role": "assistant",
+            "content": ai_response
+        })
+        
+        # Trim history
+        if len(self.conversation_history) > 8:
+            self.conversation_history = self.conversation_history[-8:]
+            logging.info("Trimmed conversation history to last 8 messages")
+        
+        logging.info(f"Assistant Response: '{ai_response}'")
+        return ai_response
+
+    def text_to_speech(self, text):
+        logging.info("Converting response to speech with gTTS...")
+        
+        temp = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
+        speech_filepath = temp.name
+        temp.close()
+        
+        # Generate speech with gTTS
+        tts = gTTS(text=text, lang='en', slow=False)
+        tts.save(speech_filepath)
+        return speech_filepath
+
+    def play_audio(self, audio_filepath):
+        logging.info("Playing response...")
+        
+        pygame.mixer.init()
+        pygame.mixer.music.load(audio_filepath)
+        pygame.mixer.music.play()
+        
+        while pygame.mixer.music.get_busy():
+            pygame.time.Clock().tick(10)
+        
+        logging.info("Playback complete!")
+
+    def cleanup_file(self, filepath):
+        try:
+            os.remove(filepath)
+            logging.info("Removed temporary file")
+        except Exception as e:
+            logging.warning(f"Could not delete {filepath}: {e}")
+
+    def start_onboarding(self):
+        greeting = "Hi! Welcome to onboarding. What's your name?"
+        logging.info(f"Assistant Greeting: '{greeting}'")
+        
+        speech_filepath = self.text_to_speech(greeting)
+        self.play_audio(speech_filepath)
+        self.cleanup_file(speech_filepath)
+        
+        self.conversation_history.append({
+            "role": "assistant",
+            "content": greeting
+        })
+
+

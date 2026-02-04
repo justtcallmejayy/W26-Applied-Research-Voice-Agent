@@ -6,6 +6,7 @@ Voice Agent for Candidate Onboarding &amp; Career Guidance (Applied Research 1, 
 ## Commands
 
 - Run the VoiceAgent: python3 src/app/main.py
+    - `USE_LOCAL=True` to use local models
 - Run the dashboard: streamlit run dashboard/dashboard.py
 
 - Create Virtual Environment: python3 -m venv venv
@@ -17,6 +18,8 @@ Voice Agent for Candidate Onboarding &amp; Career Guidance (Applied Research 1, 
 ---
 
 ## Tech & API Usage
+
+### Cloud Based
 - Audio Recording: `sounddevice`
 - Audio I/O: `soundfile`
 - Audio Playback: `pygame.mixer`
@@ -25,6 +28,17 @@ Voice Agent for Candidate Onboarding &amp; Career Guidance (Applied Research 1, 
     - OpenAI Chat Completions API (Text generation) [gpt-4]
     - OpenAI Text-to-Speech API (Speech synthesis)
 - Dashboard: `streamlit`
+
+### Local Based
+- Python Version: 3.8+
+- Package Manager: `Homebrew` (macOS)
+- Audio Processing: `FFmpeg`
+- LLM: Ollama gemma 3 (1B)
+- Audio I/O: `sounddevice` & `soundfile`
+- Audio Playback: pygame.mixer
+- LLM: Ollama gemma 3 (1B)
+- Transcription: `openai-whisper`
+- Text-to-Speech: `gtts`
 
 ---
 
