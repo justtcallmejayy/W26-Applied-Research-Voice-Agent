@@ -1,2 +1,16 @@
 [project]
-
+name = "w26-applied-research-voice-agent"
+version = "0.1.1"
+description = "Applied Research Voice Agent Prototype"
+requires-python = ">=3.10,<3.12"
+dependencies = [
+    "streamlit>=1.53.0,<2.0.0",
+    "python-dotenv>=1.1.0,<2.0.0",
+    "sounddevice>=0.5.1,<0.6.0",
+    "soundfile>=0.13.1,<0.14.0",
+    "pygame>=2.5.2,<3.0.0",
+    "numpy>=1.26.4,<2.0.0",
+    "openai>=1.75.0,<2.0.0",
+    "gtts>=2.5.4,<3.0.0",
+    "openai-whisper>=20250625,<20260000"
+]
