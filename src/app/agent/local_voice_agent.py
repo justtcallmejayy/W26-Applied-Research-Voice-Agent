@@ -1,4 +1,12 @@
 
+"""
+agent.local_voice_agent
+
+A local voice agent for conversational onboarding. All processing runs on-device with no external
+API calls - speech recognition via OpenAI Whisper, language model inference via Ollama, and 
+text-to-speech via gTTS.
+"""
+
 import logging
 import sounddevice as sd
 import soundfile as sf
@@ -10,18 +18,28 @@ import whisper
 from gtts import gTTS
 
 class LocalVoiceAgent:
+    """
+    A voice agent that handles a full spoken conversation loop entirely on-device.
+    """
 
     def __init__(self, recording_duration=5, sample_rate=16000, whisper_model="base", ollama_model="gemma3:1b"):
+        """
+        Initialise the agent, loading all local models and verifying Ollama is reachable.
+        
+        Args:
+            recording_duration (int): Seconds of audio to record per turn. Defaults to 5.
+            sample_rate (int): Microphone sample rate in Hz. Defaults to 16000.
+            whisper_model (str): Whisper model size to load (e.g. "base", "small", "medium").
+            ollama_model (str): Ollama model tag to use for response generation.
+        """
         self.recording_duration = recording_duration
         self.sample_rate = sample_rate
         self.conversation_history = []
         logging.info("Initializing local models...")
         
-        # Load Whisper
         logging.info(f"Loading Whisper model: {whisper_model}")
         self.whisper = whisper.load_model(whisper_model)
         
-        # Check Ollama
         logging.info("Checking Ollama connection...")
         self.ollama_model = ollama_model
         self.ollama_url = "http://localhost:11434/api/chat"
@@ -31,6 +49,16 @@ class LocalVoiceAgent:
         logging.info("All local models ready!")
     
     def _check_ollama(self):
+        """
+        Verify that Ollama is running and the configured model is available.
+
+        Queries the local Ollama tags endpoint to retrieve installed models.
+        If the requested model is not found but others exist, falls back to
+        the first available model. Raises if Ollama cannot be reached at all.
+
+        Raises:
+            RuntimeError: If Ollama is not reachable or the specified model is not found.
+        """
         try:
             response = requests.get("http://localhost:11434/api/tags", timeout=5)
             response.raise_for_status()
@@ -53,6 +81,13 @@ class LocalVoiceAgent:
             )
 
     def record_audio(self):
+        """
+        Record audio from the default microphone for the configured duration.
+        Blocks until recording is complete.
+
+        Returns:
+            numpy.ndarray: Raw audio samples as a float32 array of shape (samples, 1).        
+        """
         logging.info(f"Recording for {self.recording_duration} seconds... Speak now!")
         audio_data = sd.rec(
             int(self.recording_duration * self.sample_rate),
@@ -65,6 +100,15 @@ class LocalVoiceAgent:
         return audio_data
 
     def save_audio(self, audio_data):
+        """
+        Write raw audio data to a temporary WAV file on disk.
+
+        Args:
+            audio_data (numpy.ndarray): Audio samples as returned by record_audio().
+        
+        Returns:
+            str: Absolute file path to the saved WAV file.
+        """
         logging.info("Creating temporary file")
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
         filepath = temp_file.name
@@ -73,6 +117,15 @@ class LocalVoiceAgent:
         return filepath
 
     def transcribe_audio(self, audio_filepath):
+        """
+        Transcribe a WAV audio file to text using the local Whisper model.
+
+        Args:
+            audio_filepath (str): Path to a WAV file to transcribe.
+
+        Returns:
+            str: The transcribed text with leading/trailing whitespace stripped.
+        """
         logging.info("Transcribing audio with local Whisper...")
         
         result = self.whisper.transcribe(audio_filepath)
@@ -82,6 +135,22 @@ class LocalVoiceAgent:
         return transcript
 
     def generate_response(self, user_input):
+        """
+        Generate a conversational response from the local Ollama LLM.
+
+        Appends the user input to conversation history before the request and
+        the model's reply afterwards. History is trimmed to the last 8 messages
+        to avoid unbounded growth.
+
+        Args:
+            user_input (str): The user's transcribed message.
+
+        Returns:
+            str: The assistant's response text.
+
+        Raises:
+            RuntimeError: If the Ollama server does not respond within the timeout.
+        """
         logging.info(f"Generating response with local {self.ollama_model}...")
         
         self.conversation_history.append({
@@ -118,7 +187,6 @@ class LocalVoiceAgent:
             "content": ai_response
         })
         
-        # Trim history
         if len(self.conversation_history) > 8:
             self.conversation_history = self.conversation_history[-8:]
             logging.info("Trimmed conversation history to last 8 messages")
@@ -127,18 +195,37 @@ class LocalVoiceAgent:
         return ai_response
 
     def text_to_speech(self, text):
+        """
+        Synthesise speech from text and save it to a temporary MP3 file.
+
+        Uses gTTS (Google Text-to-Speech) to generate the audio. The caller
+        is responsible for deleting the file after playback via :meth:`cleanup_file`.
+
+        Args:
+            text (str): The text to convert to speech.
+
+        Returns:
+            str: Absolute path to the generated MP3 file.
+        """
         logging.info("Converting response to speech with gTTS...")
         
         temp = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
         speech_filepath = temp.name
         temp.close()
         
-        # Generate speech with gTTS
         tts = gTTS(text=text, lang='en', slow=False)
         tts.save(speech_filepath)
         return speech_filepath
 
     def play_audio(self, audio_filepath):
+        """
+        Play an audio file through the default output device using pygame.
+
+        Blocks until playback is complete before returning.
+
+        Args:
+            audio_filepath (str): Path to the audio file to play (MP3 or WAV).
+        """
         logging.info("Playing response...")
         
         pygame.mixer.init()
@@ -151,6 +238,12 @@ class LocalVoiceAgent:
         logging.info("Playback complete!")
 
     def cleanup_file(self, filepath):
+        """
+        Delete a temporary file from disk, logging a warning on failure.
+
+        Args:
+            filepath (str): Path to the file to delete.
+        """
         try:
             os.remove(filepath)
             logging.info("Removed temporary file")
@@ -158,6 +251,9 @@ class LocalVoiceAgent:
             logging.warning(f"Could not delete {filepath}: {e}")
 
     def start_onboarding(self):
+        """
+        Starts the onboarding conversation by greeting the user and asking for their name.
+        """
         greeting = "Hi! Welcome to onboarding. What's your name?"
         logging.info(f"Assistant Greeting: '{greeting}'")
         
