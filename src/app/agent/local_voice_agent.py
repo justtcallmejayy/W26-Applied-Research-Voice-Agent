@@ -16,6 +16,7 @@ import os
 import requests
 import whisper
 from gtts import gTTS
+from agent.onboarding_config import SYSTEM_PROMPT
 
 class LocalVoiceAgent:
     """
@@ -161,7 +162,7 @@ class LocalVoiceAgent:
         messages = [
             {
                 "role": "system",
-                "content": "You are a helpful onboarding voice assistant. Keep responses concise and conversational."
+                "content": SYSTEM_PROMPT
             }
         ] + self.conversation_history
         
@@ -249,21 +250,4 @@ class LocalVoiceAgent:
             logging.info("Removed temporary file")
         except Exception as e:
             logging.warning(f"Could not delete {filepath}: {e}")
-
-    def start_onboarding(self):
-        """
-        Starts the onboarding conversation by greeting the user and asking for their name.
-        """
-        greeting = "Hi! Welcome to onboarding. What's your name?"
-        logging.info(f"Assistant Greeting: '{greeting}'")
-        
-        speech_filepath = self.text_to_speech(greeting)
-        self.play_audio(speech_filepath)
-        self.cleanup_file(speech_filepath)
-        
-        self.conversation_history.append({
-            "role": "assistant",
-            "content": greeting
-        })
-
-
+            
