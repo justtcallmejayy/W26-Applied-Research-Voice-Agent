@@ -25,10 +25,6 @@ logging.basicConfig(
     ]
 )
 
-# Load env vars and initialize OpenAI client
-load_dotenv()
-client = OpenAI()
-
 def main():
 
     print("=" * 50)
@@ -42,8 +38,8 @@ def main():
         logging.info("Using LocalVoiceAgent")
         agent = LocalVoiceAgent()
     else:
-        # Could change the recording_duration, sample_rate as those are the params it takes
-        # we could also change the client from openai if it works with the class
+        load_dotenv()
+        client = OpenAI()
         logging.info("Using VoiceAgent with OpenAI client")
         agent = VoiceAgent(client=client)
 
@@ -61,12 +57,17 @@ def main():
 
             try:
                 user_text = agent.transcribe_audio(recorded_path)
+                if not user_text:
+                    logging.warning(f"Empty transcription on turn {turn + 1}, skipping...")
+                    continue
                 response = agent.generate_response(user_text)
                 speech_path = agent.text_to_speech(response)
                 agent.play_audio(speech_path)
                 agent.cleanup_file(speech_path)
             finally:
                 agent.cleanup_file(recorded_path)
+        
+        logging.info("Onboarding session complete.")
     except KeyboardInterrupt:
         logging.info("Session terminated by user during onboarding.")
     except Exception as e:
