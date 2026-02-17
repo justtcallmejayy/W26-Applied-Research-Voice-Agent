@@ -15,6 +15,7 @@ import pygame
 import os
 import requests
 import whisper
+import time
 from gtts import gTTS
 from agent.onboarding_config import SYSTEM_PROMPT
 
@@ -90,6 +91,7 @@ class LocalVoiceAgent:
             numpy.ndarray: Raw audio samples as a float32 array of shape (samples, 1).        
         """
         logging.info(f"Recording for {self.recording_duration} seconds... Speak now!")
+        t = time.time()
         audio_data = sd.rec(
             int(self.recording_duration * self.sample_rate),
             samplerate=self.sample_rate,
@@ -97,7 +99,7 @@ class LocalVoiceAgent:
             dtype='float32'
         )
         sd.wait()
-        logging.info("Recording complete!")
+        logging.info(f"Recording complete! [{time.time() - t:.2f}s]")
         return audio_data
 
     def save_audio(self, audio_data):
@@ -128,11 +130,12 @@ class LocalVoiceAgent:
             str: The transcribed text with leading/trailing whitespace stripped.
         """
         logging.info("Transcribing audio with local Whisper...")
+        t = time.time()
         
         result = self.whisper.transcribe(audio_filepath)
         transcript = result["text"].strip()
-        
-        logging.info(f"You said: '{transcript}'")
+
+        logging.info(f"You said: '{transcript}' [{time.time() - t:.2f}s]")
         return transcript
 
     def generate_response(self, user_input):
@@ -153,6 +156,7 @@ class LocalVoiceAgent:
             RuntimeError: If the Ollama server does not respond within the timeout.
         """
         logging.info(f"Generating response with local {self.ollama_model}...")
+        t = time.time()
         
         self.conversation_history.append({
             "role": "user",
@@ -188,11 +192,12 @@ class LocalVoiceAgent:
             "content": ai_response
         })
         
+        # This will get hit once more onboarding fields are added
         if len(self.conversation_history) > 8:
             self.conversation_history = self.conversation_history[-8:]
             logging.info("Trimmed conversation history to last 8 messages")
         
-        logging.info(f"Assistant Response: '{ai_response}'")
+        logging.info(f"Assistant Response: '{ai_response}' [{time.time() - t:.2f}s]")
         return ai_response
 
     def text_to_speech(self, text):
@@ -209,6 +214,7 @@ class LocalVoiceAgent:
             str: Absolute path to the generated MP3 file.
         """
         logging.info("Converting response to speech with gTTS...")
+        t = time.time()
         
         temp = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
         speech_filepath = temp.name
@@ -216,6 +222,7 @@ class LocalVoiceAgent:
         
         tts = gTTS(text=text, lang='en', slow=False)
         tts.save(speech_filepath)
+        logging.info(f"TTS complete! [{time.time() - t:.2f}s]")
         return speech_filepath
 
     def play_audio(self, audio_filepath):
@@ -228,6 +235,7 @@ class LocalVoiceAgent:
             audio_filepath (str): Path to the audio file to play (MP3 or WAV).
         """
         logging.info("Playing response...")
+        t = time.time()
         
         pygame.mixer.init()
         pygame.mixer.music.load(audio_filepath)
@@ -236,7 +244,7 @@ class LocalVoiceAgent:
         while pygame.mixer.music.get_busy():
             pygame.time.Clock().tick(10)
         
-        logging.info("Playback complete!")
+        logging.info(f"Playback complete! [{time.time() - t:.2f}s]")
 
     def cleanup_file(self, filepath):
         """
