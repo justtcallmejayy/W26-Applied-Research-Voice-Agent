@@ -15,6 +15,7 @@ import pygame
 import os
 import requests
 import whisper
+import time
 from gtts import gTTS
 from agent.onboarding_config import SYSTEM_PROMPT
 
@@ -87,18 +88,27 @@ class LocalVoiceAgent:
         Blocks until recording is complete.
 
         Returns:
-            numpy.ndarray: Raw audio samples as a float32 array of shape (samples, 1).        
+            numpy.ndarray: Raw audio samples as a float32 array of shape (samples, 1).     
+
+        Raises:
+            RuntimeError: If microphone recording fails.   
         """
         logging.info(f"Recording for {self.recording_duration} seconds... Speak now!")
-        audio_data = sd.rec(
-            int(self.recording_duration * self.sample_rate),
-            samplerate=self.sample_rate,
-            channels=1,
-            dtype='float32'
-        )
-        sd.wait()
-        logging.info("Recording complete!")
-        return audio_data
+        t = time.time()
+
+        try:
+            audio_data = sd.rec(
+                int(self.recording_duration * self.sample_rate),
+                samplerate=self.sample_rate,
+                channels=1,
+                dtype='float32'
+            )
+            sd.wait()
+            logging.info(f"Recording complete! [{time.time() - t:.2f}s]")
+            return audio_data
+        except Exception as e:
+            logging.error(f"Audio recording error: {e}")
+            raise RuntimeError("Failed to record audio from microphone: {e}")
 
     def save_audio(self, audio_data):
         """
@@ -109,13 +119,21 @@ class LocalVoiceAgent:
         
         Returns:
             str: Absolute file path to the saved WAV file.
+        
+        Raises:
+            RuntimeError: If file write fails.
         """
         logging.info("Creating temporary file")
-        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
-        filepath = temp_file.name
-        temp_file.close()
-        sf.write(filepath, audio_data, self.sample_rate)
-        return filepath
+
+        try:
+            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
+            filepath = temp_file.name
+            temp_file.close()
+            sf.write(filepath, audio_data, self.sample_rate)
+            return filepath
+        except Exception as e:
+            logging.error(f"Failed to save audio file: {e}")
+            raise RuntimeError(f"Auido file write error: {e}")
 
     def transcribe_audio(self, audio_filepath):
         """
@@ -126,14 +144,22 @@ class LocalVoiceAgent:
 
         Returns:
             str: The transcribed text with leading/trailing whitespace stripped.
+        
+        Raises:
+            RuntimeError: If Whisper transcription fails.
         """
         logging.info("Transcribing audio with local Whisper...")
+        t = time.time()
         
-        result = self.whisper.transcribe(audio_filepath)
-        transcript = result["text"].strip()
-        
-        logging.info(f"You said: '{transcript}'")
-        return transcript
+        try:
+            result = self.whisper.transcribe(audio_filepath)
+            transcript = result["text"].strip()
+
+            logging.info(f"You said: '{transcript}' [{time.time() - t:.2f}s]")
+            return transcript
+        except Exception as e:
+            logging.error(f"Whisper transcription error: {e}")
+            raise RuntimeError(f"Audio transcription failed: {e}")
 
     def generate_response(self, user_input):
         """
@@ -153,6 +179,7 @@ class LocalVoiceAgent:
             RuntimeError: If the Ollama server does not respond within the timeout.
         """
         logging.info(f"Generating response with local {self.ollama_model}...")
+        t = time.time()
         
         self.conversation_history.append({
             "role": "user",
@@ -188,11 +215,12 @@ class LocalVoiceAgent:
             "content": ai_response
         })
         
+        # This will get hit once more onboarding fields are added
         if len(self.conversation_history) > 8:
             self.conversation_history = self.conversation_history[-8:]
             logging.info("Trimmed conversation history to last 8 messages")
         
-        logging.info(f"Assistant Response: '{ai_response}'")
+        logging.info(f"Assistant Response: '{ai_response}' [{time.time() - t:.2f}s]")
         return ai_response
 
     def text_to_speech(self, text):
@@ -207,16 +235,25 @@ class LocalVoiceAgent:
 
         Returns:
             str: Absolute path to the generated MP3 file.
+
+        Raises:
+            RuntimeError: If TTS generation fails or file save fails.
         """
         logging.info("Converting response to speech with gTTS...")
+        t = time.time()
         
         temp = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
         speech_filepath = temp.name
         temp.close()
         
-        tts = gTTS(text=text, lang='en', slow=False)
-        tts.save(speech_filepath)
-        return speech_filepath
+        try:
+            tts = gTTS(text=text, lang='en', slow=False)
+            tts.save(speech_filepath)
+            logging.info(f"TTS complete! [{time.time() - t:.2f}s]")
+            return speech_filepath
+        except Exception as e:
+            logging.error(f"Text to speech failed: {e}")
+            raise RuntimeError(f"gTTS error (check internet connection): {e}")
 
     def play_audio(self, audio_filepath):
         """
@@ -226,17 +263,25 @@ class LocalVoiceAgent:
 
         Args:
             audio_filepath (str): Path to the audio file to play (MP3 or WAV).
+        
+        Raises:
+            RuntimeError: If audio playback fails.
         """
         logging.info("Playing response...")
+        t = time.time()
         
-        pygame.mixer.init()
-        pygame.mixer.music.load(audio_filepath)
-        pygame.mixer.music.play()
-        
-        while pygame.mixer.music.get_busy():
-            pygame.time.Clock().tick(10)
-        
-        logging.info("Playback complete!")
+        try:
+            pygame.mixer.init()
+            pygame.mixer.music.load(audio_filepath)
+            pygame.mixer.music.play()
+            
+            while pygame.mixer.music.get_busy():
+                pygame.time.Clock().tick(10)
+            
+            logging.info(f"Playback complete! [{time.time() - t:.2f}s]")
+        except Exception as e:
+            logging.error(f"Audio playback failed: {e}")
+            raise RuntimeError(f"Failed to play audio: {e}")
 
     def cleanup_file(self, filepath):
         """
