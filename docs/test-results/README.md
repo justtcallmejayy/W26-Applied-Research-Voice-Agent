@@ -23,6 +23,7 @@ Each test report includes:
 
 | Date | Test Focus | Key Findings |
 |------|------------|--------------|
+| [2026-02-19](2026-02-19-timing-error-handling.md) | Timing & Error Handling | gemma3:1b: 1.22s generation, 18.8s total/turn; emojis in 13.3% of responses |
 
 
 ---
