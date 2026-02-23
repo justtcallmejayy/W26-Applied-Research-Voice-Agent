@@ -4,8 +4,6 @@
 src.app.agent.voice_agent
 
 Defines the VoiceAgent class, which implements a voice based conversational agent for applied research.
-It supports end to end voice interaction by recording audio from the users microphone, transcribing speech to text, generating a response using a LLM,
-converting text to synthesized speech, and playing audio output to the user.
 
 This module relies on external services for speech to text, text generation, and text to speech, and assumes the presence of functional audio input and output devices on the users system.
 """
@@ -47,22 +45,28 @@ class VoiceAgent:
         where each value represents sound pressure level at a specific moment in time.
 
         Returns:
-            numpy.ndarray: a 2D numpy array of shape (samples, 1) containing float32 audio samples
-            with values typically in the range [-1.0, 1.0].
+            numpy.ndarray: a 2D numpy array of shape (samples, 1) containing float32 audio samples.
+        
+        Raises:
+            RuntimeError: If microphone recording fails.
         """
         logging.info(f"Recording for {self.recording_duration} seconds... Speak now!")
         t = time.time()
 
-        audio_data = sd.rec(
-            int(self.recording_duration * self.sample_rate),
-            samplerate=self.sample_rate,
-            channels=1,  # Mono audio
-            dtype='float32'
-        )
-        sd.wait()
+        try:
+            audio_data = sd.rec(
+                int(self.recording_duration * self.sample_rate),
+                samplerate=self.sample_rate,
+                channels=1,  # Mono audio
+                dtype='float32'
+            )
+            sd.wait()
 
-        logging.info(f"Recording complete! [{time.time() - t:.2f}s]")
-        return audio_data
+            logging.info(f"Recording complete! [{time.time() - t:.2f}s]")
+            return audio_data
+        except Exception as e:
+            logging.error(f"Microphone recording failed: {e}")
+            raise RuntimeError(f"Failed to record audio from microphone: {e}")
     
 
     def save_audio(self, audio_data):
@@ -77,15 +81,24 @@ class VoiceAgent:
 
         Returns:
             str: The file path to the saved temporary WAV file.
+        
+        Raises:
+            RuntimeError: If file write fails.
         """
         logging.info("Creating temporary file")
-        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
-        filepath = temp_file.name
-        temp_file.close()
-        
-        # Write audio data to file
-        sf.write(filepath, audio_data, self.sample_rate)
-        return filepath
+
+        try:
+
+            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
+            filepath = temp_file.name
+            temp_file.close()
+            
+            # Write audio data to file
+            sf.write(filepath, audio_data, self.sample_rate)
+            return filepath
+        except Exception as e:
+            logging.error(f"Failed to save audio file: {e}")
+            raise RuntimeError(f"Audio file write error: {e}")
 
     def transcribe_audio(self, audio_filepath):
         """
@@ -99,18 +112,25 @@ class VoiceAgent:
         
         Returns:
             str: The transcribed text representing the spoken content produced by the speech to text model.
+        
+        Raises:
+            RuntimeError: If API transcription fails.
         """
         logging.info("Transcribing audio...")
         t = time.time()
         
-        with open(audio_filepath, "rb") as audio_file:
-            transcript = self.client.audio.transcriptions.create(
-                model="whisper-1",          # Whisper 1 for now
-                file=audio_file,
-                response_format="text"
-            )
-        logging.info(f"You said: '{transcript}' [{time.time() - t:.2f}s]")
-        return transcript
+        try:
+            with open(audio_filepath, "rb") as audio_file:
+                transcript = self.client.audio.transcriptions.create(
+                    model="whisper-1",          # Whisper 1 for now
+                    file=audio_file,
+                    response_format="text"
+                )
+            logging.info(f"You said: '{transcript}' [{time.time() - t:.2f}s]")
+            return transcript
+        except Exception as e:
+            logging.error(f"Audio transcription failed: {e}")
+            raise RuntimeError(f"Failed to transcribe audio: {e}")
 
     def generate_response(self, user_input):
         """
@@ -123,6 +143,9 @@ class VoiceAgent:
 
         Returns:
             str: The generated response text from the language model.
+        
+        Raises:
+            RuntimeError: If the OpenAI API call fails.
         """
         logging.info("Generating response...")
         t = time.time()
@@ -141,30 +164,34 @@ class VoiceAgent:
             }
         ] + self.conversation_history
 
-        response = self.client.chat.completions.create(
-            model="gpt-4",
-            messages=messages,
-            max_tokens=150,
-            temperature=0.7,
-            presence_penalty=0.5,
-            frequency_penalty=0.2
-        )
-        ai_response = response.choices[0].message.content
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-4",
+                messages=messages,
+                max_tokens=150,
+                temperature=0.7,
+                presence_penalty=0.5,
+                frequency_penalty=0.2
+            )
+            ai_response = response.choices[0].message.content
 
-        # Add model response to conversation history
-        self.conversation_history.append({
-            "role": "assistant",
-            "content": ai_response
-        })
+            # Add model response to conversation history
+            self.conversation_history.append({
+                "role": "assistant",
+                "content": ai_response
+            })
 
-        # Limit conversation history to last 8 messages
-        max_messages = 8
-        if (len(self.conversation_history) > max_messages):
-            self.conversation_history = self.conversation_history[-max_messages:]
-            logging.info("Trimming conversation history to last 8 messages")
+            # Limit conversation history to last 8 messages
+            max_messages = 8
+            if (len(self.conversation_history) > max_messages):
+                self.conversation_history = self.conversation_history[-max_messages:]
+                logging.info("Trimming conversation history to last 8 messages")
 
-        logging.info(f"Assistant Response: '{ai_response}' [{time.time() - t:.2f}s]")
-        return ai_response
+            logging.info(f"Assistant Response: '{ai_response}' [{time.time() - t:.2f}s]")
+            return ai_response
+        except Exception as e:
+            logging.error(f"OpenAI API call failed: {e}")
+            raise RuntimeError(f"Failed to generate response from language model: {e}")
 
     def text_to_speech(self, text):
         """
@@ -177,23 +204,30 @@ class VoiceAgent:
         
         Returns:
             str: The file path to the saved temporary MP3 audio file.
+
+        Raises:
+            RuntimeError: If TTS generation of file save fails.
         """
         logging.info("Converting response to speech...")
         t = time.time()
         
-        temp = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
-        speech_filepath = temp.name
-        temp.close()
-        
-        response = self.client.audio.speech.create(
-            model="tts-1",  # Audio model, quality will differ
-            voice="alloy",  # Type of voice that the user will hear
-            input=text
-        )
-        
-        response.stream_to_file(speech_filepath)
-        logging.info(f"TTS complete! [{time.time() - t:.2f}s]")
-        return speech_filepath
+        try:
+            temp = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
+            speech_filepath = temp.name
+            temp.close()
+            
+            response = self.client.audio.speech.create(
+                model="tts-1",  # Audio model, quality will differ
+                voice="alloy",  # Type of voice that the user will hear
+                input=text
+            )
+            
+            response.stream_to_file(speech_filepath)
+            logging.info(f"TTS complete! [{time.time() - t:.2f}s]")
+            return speech_filepath
+        except Exception as e:
+            logging.error(f"TTS generation failed: {e}")
+            raise RuntimeError(f"Failed to convert text to speech: {e}")
 
     def play_audio(self, audio_filepath):
         """
@@ -203,19 +237,26 @@ class VoiceAgent:
         
         Args:
             audio_filepath (str): The file path to the audio file to be played.
+        
+        Raises:
+            RuntimeError: If audio playback fails.
         """
         logging.info("Playing response...")
         t = time.time()
         
-        # This approach relies on the PYGAME module - may not be ideal long term
-        pygame.mixer.init()
-        pygame.mixer.music.load(audio_filepath)
-        pygame.mixer.music.play()
-        
-        while pygame.mixer.music.get_busy():
-            pygame.time.Clock().tick(10)
-        
-        logging.info(f"Playback complete! [{time.time() - t:.2f}s]")
+        try:
+            # This approach relies on the PYGAME module - may not be ideal long term
+            pygame.mixer.init()
+            pygame.mixer.music.load(audio_filepath)
+            pygame.mixer.music.play()
+            
+            while pygame.mixer.music.get_busy():
+                pygame.time.Clock().tick(10)
+            
+            logging.info(f"Playback complete! [{time.time() - t:.2f}s]")
+        except Exception as e:
+            logging.error(f"Audio playback failed: {e}")
+            raise RuntimeError(f"Failed to play audio: {e}")
 
 
     def cleanup_file(self, filepath):
