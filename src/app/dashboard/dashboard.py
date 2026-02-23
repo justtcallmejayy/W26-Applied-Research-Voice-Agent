@@ -43,12 +43,22 @@ def init_state():
 init_state()
 
 
-# https://docs.python.org/3/library/logging.handlers.html
-# https://docs.python.org/3/library/logging.handlers.html#logging.FileHandler.emit
 class DashboardLogHandler(logging.Handler):
-    pass
+    """Custom logging handler that captures log messages in session state for UI display."""
+    def emit(self, record):
+        line = self.format(record)
+        st.session_state["log_lines"].append(line)
 
+        if len(st.session_state["log_lines"]) > 200:    # Keep only last 200 log lines
+            st.session_state["log_lines"] = st.session_state["log_lines"][-200:]
 
+# Attach the custom log handler if not already attached
+if not st.session_state.log_handler_attached:
+    handler = DashboardLogHandler()
+    handler.setFormatter(logging.Formatter("[%(levelname)s] %(filename)s - %(funcName)s()"))
+    logging.getLogger().addHandler(handler)
+    logging.getLogger().setLevel(logging.INFO)
+    st.session_state.log_handler_attached = True
 
 
 def build_local_agent(whisper_model, ollama_model, recording_duration, sample_rate):
@@ -60,7 +70,6 @@ def build_local_agent(whisper_model, ollama_model, recording_duration, sample_ra
         whisper_model=whisper_model,
         ollama_model=ollama_model,
     )
-
 
 def build_cloud_agent(recording_duration, sample_rate):
     """Create a VoiceAgent using OpenAI services (API key from .env)."""
