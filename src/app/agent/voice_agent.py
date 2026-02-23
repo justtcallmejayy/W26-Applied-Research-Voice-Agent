@@ -15,6 +15,7 @@ import tempfile
 import pygame
 import os
 import time
+from agent.onboarding_config import SYSTEM_PROMPT
 
 
 class VoiceAgent:
@@ -160,7 +161,7 @@ class VoiceAgent:
         messages = [
             {
                 "role": "system",
-                "content": "You are a helpful onboarding voice assistant. Keep responses concise and conversational."
+                "content": SYSTEM_PROMPT
             }
         ] + self.conversation_history
 
