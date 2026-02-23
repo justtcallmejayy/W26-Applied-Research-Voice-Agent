@@ -9,6 +9,7 @@ Interactive Streamlit dashboard for the voice agent onboarding prototype.
 import sys
 import os
 import logging
+from pathlib import Path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import streamlit as st
@@ -42,6 +43,17 @@ def init_state():
 
 init_state()
 
+# Logging to file and console
+log_file = Path(__file__).parent.parent / "logs" / "dashboard.log"
+log_file.parent.mkdir(exist_ok=True)
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(levelname)s] %(filename)s:%(lineno)d - %(funcName)s() - %(message)s',
+    handlers=[
+        logging.FileHandler(log_file),
+        logging.StreamHandler()
+    ]
+)
 
 class DashboardLogHandler(logging.Handler):
     """Custom logging handler that captures log messages in session state for UI display."""
