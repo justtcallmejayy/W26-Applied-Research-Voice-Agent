@@ -43,6 +43,13 @@ def init_state():
 init_state()
 
 
+# https://docs.python.org/3/library/logging.handlers.html
+# https://docs.python.org/3/library/logging.handlers.html#logging.FileHandler.emit
+class DashboardLogHandler(logging.Handler):
+    pass
+
+
+
 
 def build_local_agent(whisper_model, ollama_model, recording_duration, sample_rate):
     """Create a LocalVoiceAgent with specified models and audio settings."""
