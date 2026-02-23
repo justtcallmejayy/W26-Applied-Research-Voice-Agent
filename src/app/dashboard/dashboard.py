@@ -9,6 +9,7 @@ Interactive Streamlit dashboard for the voice agent onboarding prototype.
 import sys
 import os
 import logging
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import streamlit as st
 from dotenv import load_dotenv
@@ -176,3 +177,130 @@ with st.sidebar:
             st.session_state.last_response = ""
             st.rerun()
 
+
+# Main Section
+with main_col:
+
+    if st.session_state.error and not st.session_state.session_active:
+        st.error(f"**Failed to start session:** {st.session_state.error}")
+
+    if not st.session_state.session_active:
+        st.info("Configure agent in the sidebar and press **▶ Start session** to begin.")
+        st.stop()
+
+    agent = st.session_state.agent
+    total_turns = len(ONBOARDING_FIELDS)
+    current_turn = st.session_state.turn
+
+    # Progress bar
+    st.progress(
+        min(current_turn / total_turns, 1.0),
+        text=(
+            f"Turn {current_turn} of {total_turns} — "
+            f"collecting: `{ONBOARDING_FIELDS[min(current_turn, total_turns - 1)]}`"
+            if current_turn < total_turns
+            else "All fields collected"
+        ),
+    )
+
+    # Conversation history
+    st.subheader("Conversation")
+    history = agent.conversation_history
+    if not history:
+        st.caption("Waiting for session to start...")
+    else:
+        for msg in history:
+            with st.chat_message(msg["role"]):
+                st.markdown(msg["content"])
+    
+    st.divider()
+
+    # Session complete
+    if current_turn >= total_turns:
+        st.success("Onboarding complete — all fields collected.")
+        st.stop()
+    
+    # Status indicator
+    status = st.session_state.status
+    status_display = {
+        "ready":        ("READY", "Press **Record** when you're ready to speak."),
+        "recording":    ("RECORDING", f"Recording for {recording_duration}s… speak now!"),
+        "transcribing": ("PROCESSING", "Transcribing audio…"),
+        "generating":   ("PROCESSING", "Generating response…"),
+        "speaking":     ("PLAYING", "Playing response…"),
+        "error":        ("ERROR", f"{st.session_state.error}"),
+    }
+    icon, label = status_display.get(status, ("IDLE", status))
+    st.markdown(f"**{icon}**: {label}")
+
+    # Record button and retry button
+    btn_col, retry_col = st.columns([1, 2])
+    
+    with btn_col:
+        if st.button(
+            "Record",
+            disabled=(status != "ready"),
+            type="primary",
+            use_container_width=True,
+        ):
+            recorded_path = None 
+            speech_path = None 
+
+            try:
+                st.session_state.status = "recording"
+                audio_data = agent.record_audio()
+                recorded_path = agent.save_audio(audio_data)
+
+                st.session_state.status = "transcribing"
+                user_text = agent.transcribe_audio(recorded_path)
+                st.session_state.last_transcript = user_text
+
+                # Check if transcription is empty or just whitespace
+                if not user_text.strip():
+                    raise ValueError("Nothing was transcribed, please speak clearly and try again.")
+
+                st.session_state.status = "generating"
+                response = agent.generate_response(user_text)
+                st.session_state.last_response = response
+
+                st.session_state.status = "speaking"
+                speech_path = agent.text_to_speech(response)
+                agent.play_audio(speech_path)
+
+                st.session_state.turn += 1
+                st.session_state.status = "ready"
+                st.session_state.error = None
+
+            except Exception as e:
+                st.session_state.error = str(e)
+                st.session_state.status = "error"
+            finally:
+                if recorded_path:
+                    agent.cleanup_file(recorded_path)
+                if speech_path:
+                    agent.cleanup_file(speech_path)
+
+            st.rerun()
+
+    with retry_col:
+        # Show retry button if error occurred
+        if status == "error":
+            if st.button("↩ Retry turn", use_container_width=True):
+                st.session_state.status = "ready"
+                st.session_state.error = None
+                st.rerun()
+    
+    # Last turn info
+    if st.session_state.last_transcript or st.session_state.last_response:
+        with st.expander("Last turn detail"):
+            if st.session_state.last_transcript:
+                st.markdown("**Transcript (what you said)**")
+                st.code(st.session_state.last_transcript, language=None)
+            if st.session_state.last_response:
+                st.markdown("**Agent response**")
+                st.code(st.session_state.last_response, language=None)
+
+
+# Debugging Section
+with debug_col:
+    pass
