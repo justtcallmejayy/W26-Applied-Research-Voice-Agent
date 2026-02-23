@@ -16,6 +16,7 @@ import soundfile as sf
 import tempfile
 import pygame
 import os
+import time
 
 
 class VoiceAgent:
@@ -50,6 +51,8 @@ class VoiceAgent:
             with values typically in the range [-1.0, 1.0].
         """
         logging.info(f"Recording for {self.recording_duration} seconds... Speak now!")
+        t = time.time()
+
         audio_data = sd.rec(
             int(self.recording_duration * self.sample_rate),
             samplerate=self.sample_rate,
@@ -58,7 +61,7 @@ class VoiceAgent:
         )
         sd.wait()
 
-        logging.info("Recording complete!")
+        logging.info(f"Recording complete! [{time.time() - t:.2f}s]")
         return audio_data
     
 
@@ -98,6 +101,7 @@ class VoiceAgent:
             str: The transcribed text representing the spoken content produced by the speech to text model.
         """
         logging.info("Transcribing audio...")
+        t = time.time()
         
         with open(audio_filepath, "rb") as audio_file:
             transcript = self.client.audio.transcriptions.create(
@@ -105,7 +109,7 @@ class VoiceAgent:
                 file=audio_file,
                 response_format="text"
             )
-        logging.info(f"You said: '{transcript}'")
+        logging.info(f"You said: '{transcript}' [{time.time() - t:.2f}s]")
         return transcript
 
     def generate_response(self, user_input):
@@ -121,6 +125,7 @@ class VoiceAgent:
             str: The generated response text from the language model.
         """
         logging.info("Generating response...")
+        t = time.time()
 
         # Add user input to conversation history
         self.conversation_history.append({
@@ -158,7 +163,7 @@ class VoiceAgent:
             self.conversation_history = self.conversation_history[-max_messages:]
             logging.info("Trimming conversation history to last 8 messages")
 
-        logging.info(f"Assistant Response: '{ai_response}'")
+        logging.info(f"Assistant Response: '{ai_response}' [{time.time() - t:.2f}s]")
         return ai_response
 
     def text_to_speech(self, text):
@@ -174,6 +179,7 @@ class VoiceAgent:
             str: The file path to the saved temporary MP3 audio file.
         """
         logging.info("Converting response to speech...")
+        t = time.time()
         
         temp = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
         speech_filepath = temp.name
@@ -186,6 +192,7 @@ class VoiceAgent:
         )
         
         response.stream_to_file(speech_filepath)
+        logging.info(f"TTS complete! [{time.time() - t:.2f}s]")
         return speech_filepath
 
     def play_audio(self, audio_filepath):
@@ -198,6 +205,7 @@ class VoiceAgent:
             audio_filepath (str): The file path to the audio file to be played.
         """
         logging.info("Playing response...")
+        t = time.time()
         
         # This approach relies on the PYGAME module - may not be ideal long term
         pygame.mixer.init()
@@ -207,7 +215,8 @@ class VoiceAgent:
         while pygame.mixer.music.get_busy():
             pygame.time.Clock().tick(10)
         
-        logging.info("Playback complete!")
+        logging.info(f"Playback complete! [{time.time() - t:.2f}s]")
+
 
     def cleanup_file(self, filepath):
         """
