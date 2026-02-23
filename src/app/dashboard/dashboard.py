@@ -300,7 +300,44 @@ with main_col:
                 st.markdown("**Agent response**")
                 st.code(st.session_state.last_response, language=None)
 
-
 # Debugging Section
 with debug_col:
-    pass
+    st.header("Debug")
+    
+    with st.expander("Session parameters", expanded=True):
+        params = st.session_state.get("agent_params", {})
+        if params:
+            for k, v in params.items():
+                st.markdown(f"**{k}:** `{v}`")
+        else:
+            st.caption("No active session.")
+    
+    with st.expander("Turn tracker", expanded=True):
+        if st.session_state.session_active:
+            for i, field in enumerate(ONBOARDING_FIELDS):
+                if i < st.session_state.turn:
+                    st.markdown(f"[DONE] Turn {i + 1} — `{field}`")
+                elif i == st.session_state.turn:
+                    st.markdown(f"[ACTIVE] **Turn {i + 1} — `{field}`**")
+                else:
+                    st.markdown(f"[PENDING] Turn {i + 1} — `{field}`")
+        else:
+            st.caption("No active session.")
+    
+    with st.expander("System prompt", expanded=False):
+        st.code(SYSTEM_PROMPT, language=None)
+    
+    with st.expander("Raw conversation history (JSON)", expanded=False):
+        if st.session_state.session_active and st.session_state.agent:
+            history = st.session_state.agent.conversation_history
+            st.caption(f"{len(history)} messages in history")
+            st.json(history)
+        else:
+            st.caption("No active session.")
+    
+    with st.expander("Runtime log", expanded=False):
+        log_lines = st.session_state.get("log_lines", [])
+        if log_lines:
+            st.code("\n".join(log_lines[-50:]), language=None)
+        else:
+            st.caption("No log output yet.")
