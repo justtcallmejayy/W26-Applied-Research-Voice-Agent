@@ -32,7 +32,7 @@ def main():
     print("=" * 50)
 
     # Change to True/False depending on choice of local vs cloud agent
-    USE_LOCAL = True
+    USE_LOCAL = False
 
     if USE_LOCAL:
         logging.info("Using LocalVoiceAgent")
@@ -57,9 +57,20 @@ def main():
 
             try:
                 user_text = agent.transcribe_audio(recorded_path)
-                if not user_text:
-                    logging.warning(f"Empty transcription on turn {turn + 1}, skipping...")
+                cleaned_text = user_text.strip().lower()
+                garbage_words = ["you", "uh", "um", "ah", "er", "hmm"]
+
+
+                if not cleaned_text or cleaned_text in garbage_words:
+                    logging.warning(f"Empty or garbage transcription on turn {turn + 1}: '{user_text}', skipping...")
                     continue
+                
+        
+
+                # if not user_text:
+                #     logging.warning(f"Empty transcription on turn {turn + 1}, skipping...")
+                #     continue
+
                 response = agent.generate_response(user_text)
                 speech_path = agent.text_to_speech(response)
                 agent.play_audio(speech_path)
