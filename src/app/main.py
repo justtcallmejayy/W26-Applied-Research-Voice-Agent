@@ -8,6 +8,8 @@ Entry point for the voice agent prototype via command line.
 
 
 import logging
+import numpy as np
+import soundfile as sf
 from dotenv import load_dotenv
 from openai import OpenAI
 from agent.voice_agent import VoiceAgent
@@ -32,7 +34,7 @@ def main():
     print("=" * 50)
 
     # Change to True/False depending on choice of local vs cloud agent
-    USE_LOCAL = True
+    USE_LOCAL = False
 
     if USE_LOCAL:
         logging.info("Using LocalVoiceAgent")
@@ -56,10 +58,19 @@ def main():
             recorded_path = agent.save_audio(audio_data)
 
             try:
-                user_text = agent.transcribe_audio(recorded_path)
-                if not user_text:
+                audio_data_arr, sample_rate = sf.read(recorded_path)
+                audio_energy = np.abs(audio_data_arr).mean()
+                logging.info(f"Audio Energy: {audio_energy}")
+
+                if audio_energy < 0.01:
+                    logging.warning(f"Silent audio on turn {turn + 1} (energy: {audio_energy:.4f}), skipping...")
+                    continue
+
+                user_text = agent.transcribe_audio(recorded_path)        
+                if not user_text.strip():
                     logging.warning(f"Empty transcription on turn {turn + 1}, skipping...")
                     continue
+
                 response = agent.generate_response(user_text)
                 speech_path = agent.text_to_speech(response)
                 agent.play_audio(speech_path)
