@@ -8,6 +8,10 @@ Interactive Streamlit dashboard for the voice agent onboarding prototype.
 import logging
 import streamlit as st
 from dotenv import load_dotenv
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from agent.onboarding_config import ONBOARDING_FIELDS, SYSTEM_PROMPT
 from utils.logger import setup_logger
 

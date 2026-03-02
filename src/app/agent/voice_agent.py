@@ -8,7 +8,6 @@ Defines the VoiceAgent class, which implements a voice based conversational agen
 This module relies on external services for speech to text, text generation, and text to speech, and assumes the presence of functional audio input and output devices on the users system.
 """
 
-import logging
 import sounddevice as sd
 import soundfile as sf
 import tempfile
@@ -16,7 +15,9 @@ import pygame
 import os
 import time
 from agent.onboarding_config import SYSTEM_PROMPT
+from utils.logger import setup_logger
 
+logger = setup_logger(__name__, log_type="local-agent")
 
 class VoiceAgent:
 
@@ -51,7 +52,7 @@ class VoiceAgent:
         Raises:
             RuntimeError: If microphone recording fails.
         """
-        logging.info(f"Recording for {self.recording_duration} seconds... Speak now!")
+        logger.info(f"Recording for {self.recording_duration} seconds... Speak now!")
         t = time.time()
 
         try:
@@ -63,10 +64,10 @@ class VoiceAgent:
             )
             sd.wait()
 
-            logging.info(f"Recording complete! [{time.time() - t:.2f}s]")
+            logger.info(f"Recording complete! [{time.time() - t:.2f}s]")
             return audio_data
         except Exception as e:
-            logging.error(f"Microphone recording failed: {e}")
+            logger.error(f"Microphone recording failed: {e}")
             raise RuntimeError(f"Failed to record audio from microphone: {e}")
     
 
@@ -86,7 +87,7 @@ class VoiceAgent:
         Raises:
             RuntimeError: If file write fails.
         """
-        logging.info("Creating temporary file")
+        logger.info("Creating temporary file")
 
         try:
 
@@ -98,7 +99,7 @@ class VoiceAgent:
             sf.write(filepath, audio_data, self.sample_rate)
             return filepath
         except Exception as e:
-            logging.error(f"Failed to save audio file: {e}")
+            logger.error(f"Failed to save audio file: {e}")
             raise RuntimeError(f"Audio file write error: {e}")
 
     def transcribe_audio(self, audio_filepath):
@@ -117,7 +118,7 @@ class VoiceAgent:
         Raises:
             RuntimeError: If API transcription fails.
         """
-        logging.info("Transcribing audio...")
+        logger.info("Transcribing audio...")
         t = time.time()
         
         try:
@@ -127,10 +128,10 @@ class VoiceAgent:
                     file=audio_file,
                     response_format="text"
                 )
-            logging.info(f"You said: '{transcript}' [{time.time() - t:.2f}s]")
+            logger.info(f"You said: '{transcript}' [{time.time() - t:.2f}s]")
             return transcript
         except Exception as e:
-            logging.error(f"Audio transcription failed: {e}")
+            logger.error(f"Audio transcription failed: {e}")
             raise RuntimeError(f"Failed to transcribe audio: {e}")
 
     def generate_response(self, user_input):
@@ -148,7 +149,7 @@ class VoiceAgent:
         Raises:
             RuntimeError: If the OpenAI API call fails.
         """
-        logging.info("Generating response...")
+        logger.info("Generating response...")
         t = time.time()
 
         # Add user input to conversation history
@@ -186,12 +187,12 @@ class VoiceAgent:
             max_messages = 8
             if (len(self.conversation_history) > max_messages):
                 self.conversation_history = self.conversation_history[-max_messages:]
-                logging.info("Trimming conversation history to last 8 messages")
+                logger.info("Trimming conversation history to last 8 messages")
 
-            logging.info(f"Assistant Response: '{ai_response}' [{time.time() - t:.2f}s]")
+            logger.info(f"Assistant Response: '{ai_response}' [{time.time() - t:.2f}s]")
             return ai_response
         except Exception as e:
-            logging.error(f"OpenAI API call failed: {e}")
+            logger.error(f"OpenAI API call failed: {e}")
             raise RuntimeError(f"Failed to generate response from language model: {e}")
 
     def text_to_speech(self, text):
@@ -209,7 +210,7 @@ class VoiceAgent:
         Raises:
             RuntimeError: If TTS generation of file save fails.
         """
-        logging.info("Converting response to speech...")
+        logger.info("Converting response to speech...")
         t = time.time()
         
         try:
@@ -224,10 +225,10 @@ class VoiceAgent:
             )
             
             response.stream_to_file(speech_filepath)
-            logging.info(f"TTS complete! [{time.time() - t:.2f}s]")
+            logger.info(f"TTS complete! [{time.time() - t:.2f}s]")
             return speech_filepath
         except Exception as e:
-            logging.error(f"TTS generation failed: {e}")
+            logger.error(f"TTS generation failed: {e}")
             raise RuntimeError(f"Failed to convert text to speech: {e}")
 
     def play_audio(self, audio_filepath):
@@ -242,7 +243,7 @@ class VoiceAgent:
         Raises:
             RuntimeError: If audio playback fails.
         """
-        logging.info("Playing response...")
+        logger.info("Playing response...")
         t = time.time()
         
         try:
@@ -254,9 +255,9 @@ class VoiceAgent:
             while pygame.mixer.music.get_busy():
                 pygame.time.Clock().tick(10)
             
-            logging.info(f"Playback complete! [{time.time() - t:.2f}s]")
+            logger.info(f"Playback complete! [{time.time() - t:.2f}s]")
         except Exception as e:
-            logging.error(f"Audio playback failed: {e}")
+            logger.error(f"Audio playback failed: {e}")
             raise RuntimeError(f"Failed to play audio: {e}")
 
 
@@ -271,9 +272,9 @@ class VoiceAgent:
         """
         try:
             os.remove(filepath)
-            logging.info("Removed temporary file")
+            logger.info("Removed temporary file")
         except Exception as e:
-            logging.warning(f"Could not delete {filepath} : {e}")
+            logger.warning(f"Could not delete {filepath} : {e}")
 
 
     def start_onboarding(self):
@@ -281,7 +282,7 @@ class VoiceAgent:
         Initates the onboarding conversation with a greeting and prompts the user for their name.
         """
         greeting = "Hi! Welcome to onboarding. Whats your name?"
-        logging.info(f"Assistant Greeting: '{greeting}'")
+        logger.info(f"Assistant Greeting: '{greeting}'")
 
         # Convert greeting to speech and play
         speech_filepath = self.text_to_speech(greeting)
