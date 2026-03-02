@@ -6,8 +6,6 @@ src.app.main
 Entry point for the voice agent prototype via command line.
 """
 
-
-import logging
 import numpy as np
 import soundfile as sf
 from dotenv import load_dotenv
@@ -15,20 +13,12 @@ from openai import OpenAI
 from agent.voice_agent import VoiceAgent
 from agent.local_voice_agent import LocalVoiceAgent
 from agent.onboarding_config import ONBOARDING_FIELDS
-
+from utils.logger import setup_logger
 
 # Initialize logging to file and console
-logging.basicConfig(
-    level=logging.INFO,
-    format='[%(levelname)s] %(filename)s:%(lineno)d - %(funcName)s() - %(message)s',
-    handlers=[
-        logging.FileHandler('src/app/logs/app.log'), # to file
-        logging.StreamHandler()                      # to console
-    ]
-)
+logger = setup_logger(__name__, log_type="main")
 
 def main():
-
     print("=" * 50)
     print("VOICE ASSISTANT PROTOTYPE")
     print("=" * 50)
@@ -37,38 +27,38 @@ def main():
     USE_LOCAL = False
 
     if USE_LOCAL:
-        logging.info("Using LocalVoiceAgent")
+        logger.info("Using LocalVoiceAgent")
         agent = LocalVoiceAgent()
     else:
         load_dotenv()
         client = OpenAI()
-        logging.info("Using VoiceAgent with OpenAI client")
+        logger.info("Using VoiceAgent with OpenAI client")
         agent = VoiceAgent(client=client)
 
     try:
-        logging.info("Starting onboarding session...")
+        logger.info("Starting onboarding session...")
         opening = agent.generate_response("Begin the onboarding conversation.")
         speech_path = agent.text_to_speech(opening)
         agent.play_audio(speech_path)
         agent.cleanup_file(speech_path)
 
         for turn in range(len(ONBOARDING_FIELDS)):
-            logging.info(f"Starting turn {turn + 1} of {len(ONBOARDING_FIELDS)}")
+            logger.info(f"Starting turn {turn + 1} of {len(ONBOARDING_FIELDS)}")
             audio_data = agent.record_audio()
             recorded_path = agent.save_audio(audio_data)
 
             try:
                 audio_data_arr, sample_rate = sf.read(recorded_path)
                 audio_energy = np.abs(audio_data_arr).mean()
-                logging.info(f"Audio Energy: {audio_energy}")
+                logger.info(f"Audio Energy: {audio_energy}")
 
                 if audio_energy < 0.01:
-                    logging.warning(f"Silent audio on turn {turn + 1} (energy: {audio_energy:.4f}), skipping...")
+                    logger.warning(f"Silent audio on turn {turn + 1} (energy: {audio_energy:.4f}), skipping...")
                     continue
 
                 user_text = agent.transcribe_audio(recorded_path)        
                 if not user_text.strip():
-                    logging.warning(f"Empty transcription on turn {turn + 1}, skipping...")
+                    logger.warning(f"Empty transcription on turn {turn + 1}, skipping...")
                     continue
 
                 response = agent.generate_response(user_text)
@@ -78,11 +68,11 @@ def main():
             finally:
                 agent.cleanup_file(recorded_path)
         
-        logging.info("Onboarding session complete.")
+        logger.info("Onboarding session complete.")
     except KeyboardInterrupt:
-        logging.info("Session terminated by user during onboarding.")
+        logger.info("Session terminated by user during onboarding.")
     except Exception as e:
-        logging.error(f"An unexpected error occurred during onboarding: {e}")
+        logger.error(f"An unexpected error occurred during onboarding: {e}")
 
 if __name__ == "__main__":
     main()

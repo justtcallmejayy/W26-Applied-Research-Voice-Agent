@@ -1,26 +1,18 @@
 
-
 """
 src.app.dashboard.dashboard
 
 Interactive Streamlit dashboard for the voice agent onboarding prototype.
 """
 
-import sys
-import os
 import logging
-from pathlib import Path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-
 import streamlit as st
 from dotenv import load_dotenv
 from agent.onboarding_config import ONBOARDING_FIELDS, SYSTEM_PROMPT
+from utils.logger import setup_logger
 
-st.set_page_config(
-    page_title="Voice Agent Dashboard",
-    layout="wide"
-)
-
+logger = setup_logger(__name__, log_type="dashboard")
+st.set_page_config(page_title="Voice Agent Dashboard", layout="wide")
 
 def init_state():
     """Initialize Streamlit session state with default values for agent control and tracking."""
@@ -43,18 +35,6 @@ def init_state():
 
 init_state()
 
-# Logging to file and console
-log_file = Path(__file__).parent.parent / "logs" / "dashboard.log"
-log_file.parent.mkdir(exist_ok=True)
-logging.basicConfig(
-    level=logging.INFO,
-    format='[%(levelname)s] %(filename)s:%(lineno)d - %(funcName)s() - %(message)s',
-    handlers=[
-        logging.FileHandler(log_file),
-        logging.StreamHandler()
-    ]
-)
-
 class DashboardLogHandler(logging.Handler):
     """Custom logging handler that captures log messages in session state for UI display."""
     def emit(self, record):
@@ -64,12 +44,11 @@ class DashboardLogHandler(logging.Handler):
         if len(st.session_state["log_lines"]) > 200:    # Keep only last 200 log lines
             st.session_state["log_lines"] = st.session_state["log_lines"][-200:]
 
-# Attach the custom log handler if not already attached
+# Attach the custom log handler to our logger if not already attached
 if not st.session_state.log_handler_attached:
     handler = DashboardLogHandler()
     handler.setFormatter(logging.Formatter("[%(levelname)s] %(filename)s - %(funcName)s()"))
-    logging.getLogger().addHandler(handler)
-    logging.getLogger().setLevel(logging.INFO)
+    logger.addHandler(handler)
     st.session_state.log_handler_attached = True
 
 
@@ -84,7 +63,7 @@ def build_local_agent(whisper_model, ollama_model, recording_duration, sample_ra
     )
 
 def build_cloud_agent(recording_duration, sample_rate):
-    """Create a VoiceAgent using OpenAI services (API key from .env)."""
+    """Create a VoiceAgent using OpenAI services"""
     from openai import OpenAI
     load_dotenv()
     from agent.voice_agent import VoiceAgent
@@ -99,10 +78,7 @@ def build_cloud_agent(recording_duration, sample_rate):
 
 st.title("Voice Agent Onboarding Dashboard")
 st.caption("Onboarding prototype - browser interface")
-
 main_col, debug_col = st.columns([3, 2])
-
-
 
 # Configuration Sidebar
 with st.sidebar:
