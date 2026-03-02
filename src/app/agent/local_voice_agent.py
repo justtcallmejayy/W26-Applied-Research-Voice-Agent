@@ -7,7 +7,6 @@ API calls - speech recognition via OpenAI Whisper, language model inference via 
 text-to-speech via gTTS.
 """
 
-import logging
 import sounddevice as sd
 import soundfile as sf
 import tempfile
@@ -18,6 +17,9 @@ import whisper
 import time
 from gtts import gTTS
 from agent.onboarding_config import SYSTEM_PROMPT
+from utils.logger import setup_logger
+
+logger = setup_logger(__name__, log_type="local-agent")
 
 class LocalVoiceAgent:
     """
@@ -37,18 +39,18 @@ class LocalVoiceAgent:
         self.recording_duration = recording_duration
         self.sample_rate = sample_rate
         self.conversation_history = []
-        logging.info("Initializing local models...")
+        logger.info("Initializing local models...")
         
-        logging.info(f"Loading Whisper model: {whisper_model}")
+        logger.info(f"Loading Whisper model: {whisper_model}")
         self.whisper = whisper.load_model(whisper_model)
         
-        logging.info("Checking Ollama connection...")
+        logger.info("Checking Ollama connection...")
         self.ollama_model = ollama_model
         self.ollama_url = "http://localhost:11434/api/chat"
         self._check_ollama()
         
-        logging.info("Using gTTS for text-to-speech")
-        logging.info("All local models ready!")
+        logger.info("Using gTTS for text-to-speech")
+        logger.info("All local models ready!")
     
     def _check_ollama(self):
         """
@@ -69,10 +71,10 @@ class LocalVoiceAgent:
             model_names = [m["name"] for m in models]
             
             if self.ollama_model not in model_names:
-                logging.warning(f"Model {self.ollama_model} not found. Available: {model_names}")
+                logger.warning(f"Model {self.ollama_model} not found. Available: {model_names}")
                 if models:
                     self.ollama_model = models[0]["name"]
-                    logging.info(f"Using {self.ollama_model} instead")
+                    logger.info(f"Using {self.ollama_model} instead")
                 else:
                     raise RuntimeError("No Ollama models found. Run: ollama pull llama3.2")
                     
@@ -93,7 +95,7 @@ class LocalVoiceAgent:
         Raises:
             RuntimeError: If microphone recording fails.   
         """
-        logging.info(f"Recording for {self.recording_duration} seconds... Speak now!")
+        logger.info(f"Recording for {self.recording_duration} seconds... Speak now!")
         t = time.time()
 
         try:
@@ -104,10 +106,10 @@ class LocalVoiceAgent:
                 dtype='float32'
             )
             sd.wait()
-            logging.info(f"Recording complete! [{time.time() - t:.2f}s]")
+            logger.info(f"Recording complete! [{time.time() - t:.2f}s]")
             return audio_data
         except Exception as e:
-            logging.error(f"Audio recording error: {e}")
+            logger.error(f"Audio recording error: {e}")
             raise RuntimeError("Failed to record audio from microphone: {e}")
 
     def save_audio(self, audio_data):
@@ -123,7 +125,7 @@ class LocalVoiceAgent:
         Raises:
             RuntimeError: If file write fails.
         """
-        logging.info("Creating temporary file")
+        logger.info("Creating temporary file")
 
         try:
             temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
@@ -132,7 +134,7 @@ class LocalVoiceAgent:
             sf.write(filepath, audio_data, self.sample_rate)
             return filepath
         except Exception as e:
-            logging.error(f"Failed to save audio file: {e}")
+            logger.error(f"Failed to save audio file: {e}")
             raise RuntimeError(f"Auido file write error: {e}")
 
     def transcribe_audio(self, audio_filepath):
@@ -148,17 +150,17 @@ class LocalVoiceAgent:
         Raises:
             RuntimeError: If Whisper transcription fails.
         """
-        logging.info("Transcribing audio with local Whisper...")
+        logger.info("Transcribing audio with local Whisper...")
         t = time.time()
         
         try:
             result = self.whisper.transcribe(audio_filepath)
             transcript = result["text"].strip()
 
-            logging.info(f"You said: '{transcript}' [{time.time() - t:.2f}s]")
+            logger.info(f"You said: '{transcript}' [{time.time() - t:.2f}s]")
             return transcript
         except Exception as e:
-            logging.error(f"Whisper transcription error: {e}")
+            logger.error(f"Whisper transcription error: {e}")
             raise RuntimeError(f"Audio transcription failed: {e}")
 
     def generate_response(self, user_input):
@@ -178,7 +180,7 @@ class LocalVoiceAgent:
         Raises:
             RuntimeError: If the Ollama server does not respond within the timeout.
         """
-        logging.info(f"Generating response with local {self.ollama_model}...")
+        logger.info(f"Generating response with local {self.ollama_model}...")
         t = time.time()
         
         self.conversation_history.append({
@@ -207,7 +209,7 @@ class LocalVoiceAgent:
             ai_response = response.json()["message"]["content"]
             
         except requests.exceptions.RequestException as e:
-            logging.error(f"Ollama error: {e}")
+            logger.error(f"Ollama error: {e}")
             raise RuntimeError("Ollama not responding. Is it running?")
         
         self.conversation_history.append({
@@ -218,9 +220,9 @@ class LocalVoiceAgent:
         # This will get hit once more onboarding fields are added
         if len(self.conversation_history) > 8:
             self.conversation_history = self.conversation_history[-8:]
-            logging.info("Trimmed conversation history to last 8 messages")
+            logger.info("Trimmed conversation history to last 8 messages")
         
-        logging.info(f"Assistant Response: '{ai_response}' [{time.time() - t:.2f}s]")
+        logger.info(f"Assistant Response: '{ai_response}' [{time.time() - t:.2f}s]")
         return ai_response
 
     def text_to_speech(self, text):
@@ -239,7 +241,7 @@ class LocalVoiceAgent:
         Raises:
             RuntimeError: If TTS generation fails or file save fails.
         """
-        logging.info("Converting response to speech with gTTS...")
+        logger.info("Converting response to speech with gTTS...")
         t = time.time()
         
         temp = tempfile.NamedTemporaryFile(delete=False, suffix='.mp3')
@@ -249,10 +251,10 @@ class LocalVoiceAgent:
         try:
             tts = gTTS(text=text, lang='en', slow=False)
             tts.save(speech_filepath)
-            logging.info(f"TTS complete! [{time.time() - t:.2f}s]")
+            logger.info(f"TTS complete! [{time.time() - t:.2f}s]")
             return speech_filepath
         except Exception as e:
-            logging.error(f"Text to speech failed: {e}")
+            logger.error(f"Text to speech failed: {e}")
             raise RuntimeError(f"gTTS error (check internet connection): {e}")
 
     def play_audio(self, audio_filepath):
@@ -267,7 +269,7 @@ class LocalVoiceAgent:
         Raises:
             RuntimeError: If audio playback fails.
         """
-        logging.info("Playing response...")
+        logger.info("Playing response...")
         t = time.time()
         
         try:
@@ -278,9 +280,9 @@ class LocalVoiceAgent:
             while pygame.mixer.music.get_busy():
                 pygame.time.Clock().tick(10)
             
-            logging.info(f"Playback complete! [{time.time() - t:.2f}s]")
+            logger.info(f"Playback complete! [{time.time() - t:.2f}s]")
         except Exception as e:
-            logging.error(f"Audio playback failed: {e}")
+            logger.error(f"Audio playback failed: {e}")
             raise RuntimeError(f"Failed to play audio: {e}")
 
     def cleanup_file(self, filepath):
@@ -292,7 +294,7 @@ class LocalVoiceAgent:
         """
         try:
             os.remove(filepath)
-            logging.info("Removed temporary file")
+            logger.info("Removed temporary file")
         except Exception as e:
-            logging.warning(f"Could not delete {filepath}: {e}")
+            logger.warning(f"Could not delete {filepath}: {e}")
             
