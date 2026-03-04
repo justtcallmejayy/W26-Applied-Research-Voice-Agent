@@ -7,17 +7,17 @@ API calls - speech recognition via OpenAI Whisper, language model inference via 
 text-to-speech via gTTS.
 """
 
-import sounddevice as sd
-import soundfile as sf
-import tempfile
-import pygame
 import os
-import requests
-import whisper
 import time
+import pygame
+import whisper
+import tempfile
+import requests
 from gtts import gTTS
-from agent.onboarding_config import SYSTEM_PROMPT
+import soundfile as sf
+import sounddevice as sd
 from utils.logger import setup_logger
+from agent.onboarding_config import SYSTEM_PROMPT
 
 logger = setup_logger(__name__, log_type="local-agent")
 

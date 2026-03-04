@@ -11,11 +11,14 @@ python-dotenv==1.1.0
 # Audio Processing
 sounddevice==0.5.1
 soundfile==0.13.1
-pygame==2.5.2
+pygame>=2.6.1
 numpy==1.26.4
 
 # Core API Clients
 openai==1.75.0
 gtts==2.5.4
 openai-whisper==20250625
+
+#test cases
+pytest==7.3.1
 
