@@ -10,3 +10,17 @@ __pycache__/
 
 ### Virtual Envrionment
 venv/
+
+### Python
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+### macOS
+.DS_Store
+
+### IDE
+.vscode/

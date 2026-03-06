@@ -1,6 +1,6 @@
 import os
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 # Because of conftest.py, Python now knows exactly where 'agent' is!
 from agent.local_voice_agent import LocalVoiceAgent
@@ -64,5 +64,3 @@ def test_generate_response_updates_history(mock_generate, mock_local_agent):
     assert response == fake_llm_response
     assert len(mock_local_agent.conversation_history) == 2
     assert mock_local_agent.conversation_history[-1]["role"] == "agent"
-    
-    """ To ensure system stability and isolate our core logic from the high latency of the LLM/STT models, we implemented a unit testing suite using pytest and unittest.mock. We successfully mocked the heavy AI inference layers (Whisper and Ollama) using MagicMock, which allows us to instantly test our file cleanup utility (test_cleanup_file) and state management without incurring OpenAI API costs or requiring GPU compute. """
