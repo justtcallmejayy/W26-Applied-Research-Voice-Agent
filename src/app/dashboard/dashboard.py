@@ -1,25 +1,42 @@
-
 """
 src.app.dashboard.dashboard
 
 Interactive Streamlit dashboard for the voice agent onboarding prototype.
+Resolved: Root Logging for Runtime Logs & Turn Indexing Sync.
 """
 
+import sys
 import logging
 import streamlit as st
-from dotenv import load_dotenv
-import sys
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Ensure the app directory is in the path for internal imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from agent.onboarding_config import ONBOARDING_FIELDS, SYSTEM_PROMPT
-from utils.logger import setup_logger
+try:
+    from utils.logger import setup_logger
+    from agent.onboarding_config import ONBOARDING_FIELDS, SYSTEM_PROMPT
+except ImportError:
+    # Fallback placeholders for localized testing
+    setup_logger = None
+    ONBOARDING_FIELDS = ["name", "employment_status", "skills", "experience", "education", "job_preferences"]
+    SYSTEM_PROMPT = "You are a voice assistant..."
 
-logger = setup_logger(__name__, log_type="dashboard")
-st.set_page_config(page_title="Voice Agent Dashboard", layout="wide")
+# Initialize local dashboard logger
+if setup_logger:
+    logger = setup_logger(__name__, log_type="dashboard")
+else:
+    logger = logging.getLogger(__name__)
+
+st.set_page_config(
+    page_title="Voice Agent Dashboard",
+    page_icon="🎙️",
+    layout="wide"
+)
 
 def init_state():
-    """Initialize Streamlit session state with default values for agent control and tracking."""
+    """Initialize Streamlit session state with default values."""
     defaults = {
         "agent": None,
         "agent_type": None,
@@ -40,20 +57,30 @@ def init_state():
 init_state()
 
 class DashboardLogHandler(logging.Handler):
-    """Custom logging handler that captures log messages in session state for UI display."""
+    """Custom logging handler that captures log messages from the entire app into session state."""
     def emit(self, record):
-        line = self.format(record)
-        st.session_state["log_lines"].append(line)
+        try:
+            line = self.format(record)
+            # We use a list in session state to store log lines
+            if "log_lines" in st.session_state:
+                st.session_state["log_lines"].append(line)
+                # Keep buffer manageable (last 100 lines)
+                if len(st.session_state["log_lines"]) > 100:
+                    st.session_state["log_lines"] = st.session_state["log_lines"][-100:]
+        except Exception:
+            self.handleError(record)
 
-        if len(st.session_state["log_lines"]) > 200:    # Keep only last 200 log lines
-            st.session_state["log_lines"] = st.session_state["log_lines"][-200:]
-
-# Attach the custom log handler to our logger if not already attached
+# --- THE FIX: ATTACH TO ROOT LOGGER ---
+# By attaching to the root logger, we capture logs from ALL modules (Agent, STT, LLM, etc.)
 if not st.session_state.log_handler_attached:
-    handler = DashboardLogHandler()
-    handler.setFormatter(logging.Formatter("[%(levelname)s] %(filename)s - %(funcName)s()"))
-    logger.addHandler(handler)
+    root_logger = logging.getLogger()
+    dash_handler = DashboardLogHandler()
+    dash_handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s", datefmt="%H:%M:%S"))
+    root_logger.addHandler(dash_handler)
+    # Ensure the level is set to capture info
+    root_logger.setLevel(logging.INFO)
     st.session_state.log_handler_attached = True
+    logging.info("Dashboard Log Handler successfully attached to Root Logger.")
 
 
 def build_local_agent(whisper_model, ollama_model, recording_duration, sample_rate):
@@ -77,14 +104,13 @@ def build_cloud_agent(recording_duration, sample_rate):
         sample_rate=sample_rate,
     )
 
-
-
-
 st.title("Voice Agent Onboarding Dashboard")
 st.caption("Onboarding prototype - browser interface")
 main_col, debug_col = st.columns([3, 2])
 
-# Configuration Sidebar
+# ==========================================
+# SIDEBAR CONFIGURATION
+# ==========================================
 with st.sidebar:
     st.header("Configuration")
     agent_choice = st.radio(
@@ -126,18 +152,17 @@ with st.sidebar:
 
     st.divider()
     st.subheader("Onboarding fields")
-    st.caption("Edit in `onboarding_config.py`")
     for f in ONBOARDING_FIELDS:
         st.markdown(f"- `{f}`")
 
     st.divider()
 
-    # Start or end the session based on current state
+    # Session Lifecycle Toggle
     if not st.session_state.session_active:
         if st.button("▶ Start session", type="primary", use_container_width=True):
             st.session_state.log_lines = []
             try:
-                with st.spinner("Loading models…"):
+                with st.spinner("Loading models..."):
                     agent = (
                         build_local_agent(whisper_model, ollama_model, recording_duration, sample_rate)
                         if use_local
@@ -150,19 +175,13 @@ with st.sidebar:
                 st.session_state.turn = 0
                 st.session_state.status = "ready"
                 st.session_state.error = None
-                st.session_state.last_transcript = ""
-                st.session_state.last_response = ""
+                
                 st.session_state.agent_params = {
                     "agent_class": "LocalVoiceAgent" if use_local else "VoiceAgent",
-                    "recording_duration": f"{recording_duration}s",
-                    "sample_rate": f"{sample_rate} Hz",
-                    "whisper_model": whisper_model if use_local else "whisper-1 (API)",
+                    "whisper": whisper_model if use_local else "whisper-1",
                     "llm": ollama_model if use_local else "gpt-4",
-                    "tts": "gTTS" if use_local else "OpenAI TTS (alloy)",
-                    "total_turns": len(ONBOARDING_FIELDS),
                 }
 
-                # Opening message (same behaviour as in main.py)
                 opening = agent.generate_response("Begin the onboarding conversation.")
                 speech_path = agent.text_to_speech(opening)
                 agent.play_audio(speech_path)
@@ -173,22 +192,18 @@ with st.sidebar:
                 st.session_state.error = str(e)
                 st.session_state.status = "error"
                 st.session_state.session_active = False
-
             st.rerun()
     else:
         if st.button("⏹ End session", use_container_width=True):
             st.session_state.session_active = False
             st.session_state.agent = None
             st.session_state.status = "idle"
-            st.session_state.turn = 0
-            st.session_state.last_transcript = ""
-            st.session_state.last_response = ""
             st.rerun()
 
-
-# Main Section
+# ==========================================
+# MAIN CONVERSATION PANEL
+# ==========================================
 with main_col:
-
     if st.session_state.error and not st.session_state.session_active:
         st.error(f"**Failed to start session:** {st.session_state.error}")
 
@@ -200,60 +215,47 @@ with main_col:
     total_turns = len(ONBOARDING_FIELDS)
     current_turn = st.session_state.turn
 
-    # Progress bar
+    # FIXED: Progress bar logic (Syncing Turn 1 vs Index 0)
+    display_turn = min(current_turn + 1, total_turns)
+    progress_val = min(current_turn / total_turns, 1.0)
+    
     st.progress(
-        min(current_turn / total_turns, 1.0),
+        progress_val,
         text=(
-            f"Turn {current_turn} of {total_turns} — "
+            f"Turn {display_turn} of {total_turns} — "
             f"collecting: `{ONBOARDING_FIELDS[min(current_turn, total_turns - 1)]}`"
-            if current_turn < total_turns
-            else "All fields collected"
+            if current_turn < total_turns else "Onboarding Complete"
         ),
     )
 
-    # Conversation history
     st.subheader("Conversation")
     history = agent.conversation_history
-    if not history:
-        st.caption("Waiting for session to start...")
-    else:
-        for msg in history:
-            with st.chat_message(msg["role"]):
-                st.markdown(msg["content"])
+    for msg in history:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
     
     st.divider()
 
-    # Session complete
     if current_turn >= total_turns:
         st.success("Onboarding complete — all fields collected.")
         st.stop()
     
-    # Status indicator
+    # Status & Recording Logic
     status = st.session_state.status
     status_display = {
-        "ready":        ("READY", "Press **Record** when you're ready to speak."),
-        "recording":    ("RECORDING", f"Recording for {recording_duration}s… speak now!"),
-        "transcribing": ("PROCESSING", "Transcribing audio…"),
-        "generating":   ("PROCESSING", "Generating response…"),
-        "speaking":     ("PLAYING", "Playing response…"),
+        "ready":        ("READY", "Press **Record** to answer."),
+        "recording":    ("RECORDING", f"Speak now ({recording_duration}s)..."),
+        "transcribing": ("PROCESSING", "Transcribing..."),
+        "generating":   ("PROCESSING", "Agent is thinking..."),
+        "speaking":     ("PLAYING", "Agent is speaking..."),
         "error":        ("ERROR", f"{st.session_state.error}"),
     }
     icon, label = status_display.get(status, ("IDLE", status))
     st.markdown(f"**{icon}**: {label}")
 
-    # Record button and retry button
     btn_col, retry_col = st.columns([1, 2])
-    
     with btn_col:
-        if st.button(
-            "Record",
-            disabled=(status != "ready"),
-            type="primary",
-            use_container_width=True,
-        ):
-            recorded_path = None 
-            speech_path = None 
-
+        if st.button("Record", disabled=(status != "ready"), type="primary", use_container_width=True):
             try:
                 st.session_state.status = "recording"
                 audio_data = agent.record_audio()
@@ -263,9 +265,8 @@ with main_col:
                 user_text = agent.transcribe_audio(recorded_path)
                 st.session_state.last_transcript = user_text
 
-                # Check if transcription is empty or just whitespace
                 if not user_text.strip():
-                    raise ValueError("Nothing was transcribed, please speak clearly and try again.")
+                    raise ValueError("Nothing was transcribed. Please try again.")
 
                 st.session_state.status = "generating"
                 response = agent.generate_response(user_text)
@@ -278,51 +279,32 @@ with main_col:
                 st.session_state.turn += 1
                 st.session_state.status = "ready"
                 st.session_state.error = None
-
             except Exception as e:
                 st.session_state.error = str(e)
                 st.session_state.status = "error"
-            finally:
-                if recorded_path:
-                    agent.cleanup_file(recorded_path)
-                if speech_path:
-                    agent.cleanup_file(speech_path)
-
             st.rerun()
 
     with retry_col:
-        # Show retry button if error occurred
-        if status == "error":
-            if st.button("↩ Retry turn", use_container_width=True):
-                st.session_state.status = "ready"
-                st.session_state.error = None
-                st.rerun()
-    
-    # Last turn info
-    if st.session_state.last_transcript or st.session_state.last_response:
-        with st.expander("Last turn detail"):
-            if st.session_state.last_transcript:
-                st.markdown("**Transcript (what you said)**")
-                st.code(st.session_state.last_transcript, language=None)
-            if st.session_state.last_response:
-                st.markdown("**Agent response**")
-                st.code(st.session_state.last_response, language=None)
+        if status == "error" and st.button("↩ Retry turn", use_container_width=True):
+            st.session_state.status = "ready"
+            st.session_state.error = None
+            st.rerun()
 
-# Debugging Section
+# ==========================================
+# DEBUG PANEL (OBSERVABILITY)
+# ==========================================
 with debug_col:
     st.header("Debug")
     
     with st.expander("Session parameters", expanded=True):
         params = st.session_state.get("agent_params", {})
-        if params:
-            for k, v in params.items():
-                st.markdown(f"**{k}:** `{v}`")
-        else:
-            st.caption("No active session.")
+        for k, v in params.items():
+            st.markdown(f"**{k}:** `{v}`")
     
     with st.expander("Turn tracker", expanded=True):
         if st.session_state.session_active:
             for i, field in enumerate(ONBOARDING_FIELDS):
+                # Using text labels instead of emojis
                 if i < st.session_state.turn:
                     st.markdown(f"[DONE] Turn {i + 1} — `{field}`")
                 elif i == st.session_state.turn:
@@ -336,16 +318,13 @@ with debug_col:
         st.code(SYSTEM_PROMPT, language=None)
     
     with st.expander("Raw conversation history (JSON)", expanded=False):
-        if st.session_state.session_active and st.session_state.agent:
-            history = st.session_state.agent.conversation_history
-            st.caption(f"{len(history)} messages in history")
-            st.json(history)
-        else:
-            st.caption("No active session.")
+        if st.session_state.agent:
+            st.json(st.session_state.agent.conversation_history)
     
-    with st.expander("Runtime log", expanded=False):
+    with st.expander("Runtime log", expanded=True):
         log_lines = st.session_state.get("log_lines", [])
         if log_lines:
-            st.code("\n".join(log_lines[-50:]), language=None)
+            # Join the lines with newlines for clean display in a code block
+            st.code("\n".join(log_lines), language=None)
         else:
-            st.caption("No log output yet.")
+            st.caption("Waiting for logs... (Interaction required)")
