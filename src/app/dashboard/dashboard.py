@@ -1,8 +1,8 @@
+
 """
 src.app.dashboard.dashboard
 
 Interactive Streamlit dashboard for the voice agent onboarding prototype.
-Resolved: Root Logging for Runtime Logs & Turn Indexing Sync.
 """
 
 import sys
@@ -70,8 +70,6 @@ class DashboardLogHandler(logging.Handler):
         except Exception:
             self.handleError(record)
 
-# --- THE FIX: ATTACH TO ROOT LOGGER ---
-# By attaching to the root logger, we capture logs from ALL modules (Agent, STT, LLM, etc.)
 if not st.session_state.log_handler_attached:
     root_logger = logging.getLogger()
     dash_handler = DashboardLogHandler()
@@ -215,7 +213,6 @@ with main_col:
     total_turns = len(ONBOARDING_FIELDS)
     current_turn = st.session_state.turn
 
-    # FIXED: Progress bar logic (Syncing Turn 1 vs Index 0)
     display_turn = min(current_turn + 1, total_turns)
     progress_val = min(current_turn / total_turns, 1.0)
     
@@ -324,7 +321,6 @@ with debug_col:
     with st.expander("Runtime log", expanded=True):
         log_lines = st.session_state.get("log_lines", [])
         if log_lines:
-            # Join the lines with newlines for clean display in a code block
             st.code("\n".join(log_lines), language=None)
         else:
             st.caption("Waiting for logs... (Interaction required)")

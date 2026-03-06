@@ -217,7 +217,6 @@ class LocalVoiceAgent:
             "content": ai_response
         })
         
-        # This will get hit once more onboarding fields are added
         if len(self.conversation_history) > 8:
             self.conversation_history = self.conversation_history[-8:]
             logger.info("Trimmed conversation history to last 8 messages")
