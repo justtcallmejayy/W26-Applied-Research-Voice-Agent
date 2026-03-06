@@ -18,7 +18,7 @@ pip install -r requirements.txt
 python3 src/app/main.py
 
 # 4. Run the dashboard (optional)
-streamlit run dashboard/dashboard.py
+streamlit run src/app/dashboard/dashboard.py
 ```
 
 > Set `USE_LOCAL = True` in `main.py` to use local models, or `False` for the OpenAI cloud-based agent.
@@ -43,6 +43,8 @@ W26-Applied-Research-Voice-Agent/
 │       ├── dashboard/      # Streamlit dashboard
 │       └── logs/           # runtime logs
 └── tests/
+    ├── conftest.py
+    └── test_voice_agent.py
 ```
 
 ---
@@ -76,7 +78,8 @@ The number of turns is driven by `ONBOARDING_FIELDS` in `onboarding_config.py`. 
 | Audio recording | `sounddevice` + `soundfile` |
 | Audio playback | `pygame.mixer` |
 | Audio processing | `FFmpeg` (via Homebrew) |
-| Python | 3.8+ |
+| Python | 3.10+ |
+
 
 ### Cloud (USE_LOCAL = False)
 | Concern | Tool |
@@ -99,7 +102,10 @@ Onboarding behaviour is controlled entirely in `src/app/agent/onboarding_config.
 ONBOARDING_FIELDS = [
     "name",
     "employment_status",
-    "desired_job_title",
+    "skills",
+    "experience",
+    "education",
+    "job_preferences"
 ]
 
 # Controls LLM behaviour during the session
@@ -115,11 +121,12 @@ To add a new onboarding field, add a string to `ONBOARDING_FIELDS`. No other cha
 | Command | Description |
 |---------|-------------|
 | `python3 src/app/main.py` | Run the voice agent |
-| `streamlit run dashboard/dashboard.py` | Run the dashboard |
+| `streamlit run src/app/dashboard/dashboard.py` | Run the dashboard |
 | `python3 -m venv venv` | Create virtual environment |
 | `source venv/bin/activate` | Activate virtual environment |
 | `pip install -r requirements.txt` | Install dependencies |
 | `deactivate` | Deactivate virtual environment |
 | `rm -rf venv` | Remove virtual environment |
+| `pytest tests/ -v` | Run the test suite |
 
 ---
