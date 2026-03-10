@@ -17,7 +17,7 @@ import time
 from agent.onboarding_config import SYSTEM_PROMPT
 from utils.logger import setup_logger
 
-logger = setup_logger(__name__, log_type="local-agent")
+logger = setup_logger(__name__, log_type="cloud-agent")
 
 class VoiceAgent:
 
