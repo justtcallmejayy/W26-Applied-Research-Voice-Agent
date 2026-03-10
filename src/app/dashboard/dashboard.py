@@ -23,11 +23,7 @@ except ImportError:
     ONBOARDING_FIELDS = ["name", "employment_status", "skills", "experience", "education", "job_preferences"]
     SYSTEM_PROMPT = "You are a voice assistant..."
 
-# Initialize local dashboard logger
-if setup_logger:
-    logger = setup_logger(__name__, log_type="dashboard")
-else:
-    logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 st.set_page_config(
     page_title="Voice Agent Dashboard",
