@@ -21,7 +21,7 @@ def main():
     print("=" * 50)
 
     # Change to True/False depending on choice of local vs cloud agent
-    USE_LOCAL = True
+    USE_LOCAL = False
 
     log_type = "local-agent" if USE_LOCAL else "cloud-agent"
     logger = setup_logger(__name__, log_type=log_type)
