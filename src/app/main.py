@@ -6,14 +6,12 @@ src.app.main
 Entry point for the voice agent prototype via command line.
 """
 
+import logging
 import numpy as np
 import soundfile as sf
 from dotenv import load_dotenv
 from openai import OpenAI
-from agent.voice_agent import VoiceAgent
-from agent.local_voice_agent import LocalVoiceAgent
 from agent.onboarding_config import ONBOARDING_FIELDS
-from utils.logger import setup_logger
 
 def main():
     print("=" * 50)
@@ -21,19 +19,24 @@ def main():
     print("=" * 50)
 
     # Change to True/False depending on choice of local vs cloud agent
-    USE_LOCAL = False
+    USE_LOCAL = True
 
-    log_type = "local-agent" if USE_LOCAL else "cloud-agent"
-    logger = setup_logger(__name__, log_type=log_type)
+    logger = logging.getLogger(__name__)
 
     if USE_LOCAL:
-        logger.info("Using LocalVoiceAgent")
+        from agent.local_voice_agent import LocalVoiceAgent
         agent = LocalVoiceAgent()
+        logger = logging.getLogger("agent.local_voice_agent")
+        logger.info("Using LocalVoiceAgent")
+
     else:
         load_dotenv()
         client = OpenAI()
-        logger.info("Using VoiceAgent with OpenAI client")
+        from agent.voice_agent import VoiceAgent
         agent = VoiceAgent(client=client)
+        logger = logging.getLogger("agent.voice_agent")
+        logger.info("Using VoiceAgent with OpenAI client")
+
 
     try:
         logger.info("Starting onboarding session...")

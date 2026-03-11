@@ -23,13 +23,9 @@ except ImportError:
     ONBOARDING_FIELDS = ["name", "employment_status", "skills", "experience", "education", "job_preferences"]
     SYSTEM_PROMPT = "You are a voice assistant..."
 
-logger = logging.getLogger(__name__)
 
-st.set_page_config(
-    page_title="Voice Agent Dashboard",
-    page_icon="🎙️",
-    layout="wide"
-)
+st.set_page_config(page_title="Voice Agent Dashboard", layout="wide")
+
 
 def init_state():
     """Initialize Streamlit session state with default values."""

@@ -22,5 +22,9 @@ build/
 ### macOS
 .DS_Store
 
+# Project context
+CONTEXT.md
+CLAUDE.md
+
 ### IDE
 .vscode/
