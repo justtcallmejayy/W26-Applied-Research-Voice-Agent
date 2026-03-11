@@ -20,6 +20,7 @@ class STTEngine(ABC):
         Returns:
             str: The transcribed text from the audio
         """
+        pass
 
 
 class LLMEngine(ABC):
@@ -35,6 +36,7 @@ class LLMEngine(ABC):
         Returns:
             str: The assistant's response text
         """
+        pass
 
 class TTSEngine(ABC):
     """Base class for Text-to-Speech engines"""
@@ -50,3 +52,6 @@ class TTSEngine(ABC):
             str: The absolute file path to the generated audio file (WAV format).
                  Caller is responsible for deleting the temporary file after playback.
         """
+        pass
+
+    
