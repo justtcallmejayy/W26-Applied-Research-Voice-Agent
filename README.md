@@ -103,8 +103,8 @@ ONBOARDING_FIELDS = [
     "name",
     "employment_status",
     "skills",
-    "experience",
     "education",
+    "experience",
     "job_preferences"
 ]
 

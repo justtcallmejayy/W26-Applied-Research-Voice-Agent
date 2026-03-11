@@ -15,9 +15,6 @@ from agent.local_voice_agent import LocalVoiceAgent
 from agent.onboarding_config import ONBOARDING_FIELDS
 from utils.logger import setup_logger
 
-# Initialize logging to file and console
-logger = setup_logger(__name__, log_type="main")
-
 def main():
     print("=" * 50)
     print("VOICE ASSISTANT PROTOTYPE")
@@ -25,6 +22,9 @@ def main():
 
     # Change to True/False depending on choice of local vs cloud agent
     USE_LOCAL = False
+
+    log_type = "local-agent" if USE_LOCAL else "cloud-agent"
+    logger = setup_logger(__name__, log_type=log_type)
 
     if USE_LOCAL:
         logger.info("Using LocalVoiceAgent")
@@ -43,7 +43,9 @@ def main():
         agent.cleanup_file(speech_path)
 
         for turn in range(len(ONBOARDING_FIELDS)):
-            logger.info(f"Starting turn {turn + 1} of {len(ONBOARDING_FIELDS)}")
+            current_field = ONBOARDING_FIELDS[turn] # Current field were collecting
+            logger.info(f"Starting turn {turn + 1} of {len(ONBOARDING_FIELDS)} — collecting: {current_field}")
+    
             audio_data = agent.record_audio()
             recorded_path = agent.save_audio(audio_data)
 
