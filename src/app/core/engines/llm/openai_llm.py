@@ -11,7 +11,7 @@ import time
 from core.engines.base import LLMEngine
 from utils.logger import setup_logger
 
-logger = setup_logger(__name__, log_type="engine-llm")
+logger = setup_logger(__name__, log_type="pipeline")
 
 class OpenAILLMEngine(LLMEngine):
     """Generates responses using GPT-4 via OpenAI. """

@@ -13,7 +13,7 @@ import requests
 from core.engines.base import LLMEngine
 from utils.logger import setup_logger
 
-logger = setup_logger(__name__, log_type="engine-llm")
+logger = setup_logger(__name__, log_type="pipeline")
 
 class OllamaLLMEngine(LLMEngine):
     """Generates a response using a local Ollama model via the Ollama REST API."""

@@ -11,7 +11,7 @@ import time
 from core.engines.base import STTEngine
 from utils.logger import setup_logger
 
-logger = setup_logger(__name__, log_type="engine-stt")
+logger = setup_logger(__name__, log_type="pipeline")
 
 class WhisperLocalEngine(STTEngine):
     """Transcribes audio using a local openai-whisper model."""

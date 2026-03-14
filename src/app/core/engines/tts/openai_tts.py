@@ -12,7 +12,7 @@ import tempfile
 from core.engines.base import TTSEngine
 from utils.logger import setup_logger
 
-logger = setup_logger(__name__, log_type="engine-tts")
+logger = setup_logger(__name__, log_type="pipeline")
 
 
 class OpenAITTSEngine(TTSEngine):

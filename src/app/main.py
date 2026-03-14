@@ -11,7 +11,7 @@ from utils.logger import setup_logger
 from config import ENGINES, ONBOARDING_FIELDS, SYSTEM_PROMPT, RECORDING_DURATION, AUDIO_SAMPLE_RATE, ENERGY_THRESHOLD
 from core.pipeline import load_engine, OnboardingPipeline
 
-logger = setup_logger(__name__, log_type="main")
+logger = setup_logger(__name__, log_type="pipeline")
 
 def main():
     print("=" * 50)
