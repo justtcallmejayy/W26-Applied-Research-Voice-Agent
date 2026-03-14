@@ -30,18 +30,28 @@ streamlit run src/app/dashboard/dashboard.py
 ```bash
 W26-Applied-Research-Voice-Agent/
 ├── README.md
-├── requirements.txt        # pip dependencies
-├── pyproject.toml          # project config and Python version
-├── docs/                   # documentation files
+├── requirements.txt                   # pip dependencies
+├── pyproject.toml                     # project config and Python version
+├── docs/
+│   ├── ARCHITECTURE.md                # system design and pipeline overview
+│   ├── DECISIONS.md                   # key technical decisions and reasoning
+│   ├── SETUP.md                       # detailed setup and troubleshooting
+│   └── test-results/                  # structured test reports
 ├── src/
 │   └── app/
-│       ├── main.py         # entry point
-│       ├── agent/          # cloud and local agent logic
-│       │   ├── voice_agent.py
-│       │   ├── local_voice_agent.py
-│       │   └── onboarding_config.py
-│       ├── dashboard/      # Streamlit dashboard
-│       └── logs/           # runtime logs
+│       ├── main.py                    # CLI entry point
+│       ├── config.py                  # central configuration (integration pending)
+│       ├── agent/
+│       │   ├── voice_agent.py         # cloud agent
+│       │   ├── local_voice_agent.py   # local agent
+│       │   └── onboarding_config.py   # fields and system prompt
+│       ├── core/
+│       │   └── engines/
+│       │       └── base.py            # abstract engine interfaces
+│       ├── dashboard/
+│       │   └── dashboard.py           # Streamlit dashboard
+│       └── utils/
+│           └── logger.py
 └── tests/
     ├── conftest.py
     └── test_voice_agent.py
@@ -93,29 +103,6 @@ The number of turns is driven by `ONBOARDING_FIELDS` in `onboarding_config.py`. 
 
 ---
 
-## Configuration
-
-Onboarding behaviour is controlled entirely in `src/app/agent/onboarding_config.py`:
-
-```python
-# Fields the LLM will collect in order
-ONBOARDING_FIELDS = [
-    "name",
-    "employment_status",
-    "skills",
-    "education",
-    "experience",
-    "job_preferences"
-]
-
-# Controls LLM behaviour during the session
-SYSTEM_PROMPT = """..."""
-```
-
-To add a new onboarding field, add a string to `ONBOARDING_FIELDS`. No other changes are needed.
-
----
-
 ## Commands Reference
 
 | Command | Description |
@@ -130,3 +117,12 @@ To add a new onboarding field, add a string to `ONBOARDING_FIELDS`. No other cha
 | `pytest tests/ -v` | Run the test suite |
 
 ---
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [Architecture](docs/ARCHITECTURE.md) | System design, pipeline, and component overview |
+| [Decisions](docs/DECISIONS.md) | Key technical decisions and reasoning |
+| [Setup](docs/SETUP.md) | Detailed setup, configuration, and troubleshooting |
+| [Test Results](docs/test-results/README.md) | All test reports and current performance metrics |

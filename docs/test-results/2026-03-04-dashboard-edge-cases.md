@@ -1,16 +1,13 @@
 # **Test Results: Dashboard UI, Edge Cases & Debug Panel Validation**
 
 **Date**: 2026-03-04
-
 **Tester**: Jay Choksi
-
 **Branch**: test/2026-03-04-bad-edge-case
-
 **Operating System**: macOS Tahoe 26.1
-
 **Hardware**: MacBook Pro M4 Pro, 24GB RAM
-
 **Models Tested**: gemma3:1b (Ollama local), Whisper (base)
+
+---
 
 ## **1\. Dashboard Initialization & Configuration Controls**
 
@@ -35,6 +32,8 @@ This section validates that the Streamlit onboarding dashboard loads correctly, 
 - The dynamic UI logic (hiding/showing local model inputs) is working correctly.
 - Disabling inputs during the session prevents runtime crashes from mid-session config changes.
 
+---
+
 ## **2\. Error Handling & Edge Cases**
 
 Validating UI resilience when the agent fails to transcribe audio (e.g., silent audio, mumbling, or missing microphone permissions).
@@ -51,9 +50,8 @@ Validating UI resilience when the agent fails to transcribe audio (e.g., silent 
 - The "Nothing was transcribed" error handling is robust.
 - The "Retry" button successfully prevents session deadlocks and keeps the current turn context intact.
 
-**Error State Evidence:**
+---
 
-![alt text](<../diagrams/test-report-images/Screenshot 2026-03-04 at 19.32.32.png>)
 ## **3\. Session Lifecycle, Turn Execution & Observability**
 
 This section validates the core onboarding workflow, the accuracy of the debug trackers, and the runtime observability required for Applied Research performance tracking.
@@ -74,8 +72,7 @@ This section validates the core onboarding workflow, the accuracy of the debug t
 - **Visual Sync:** An off-by-one error exists in the progress header that needs to be synced with the 0-indexed tracker logic.
 - **Runtime Log Disconnect:** System logs are not appearing in the dashboard debug tab. This is a high-priority fix for the next sprint to allow for real-time latency monitoring.
 
-**Observability Evidence:**
-![alt text](<../diagrams/test-report-images/Screenshot 2026-03-04 at 12.56.07.png>)
+---
 
 ## **Summary**
 
@@ -91,6 +88,8 @@ This section validates the core onboarding workflow, the accuracy of the debug t
 - **Runtime Log Disconnect:** System logs are not appearing in the dashboard debug tab.
 - **Turn Indexing Mismatch:** The progress bar header text is one turn behind the actual debug tracker.
 
+---
+
 **Next Steps:**
 
 - Update the DashboardLogHandler in dashboard.py to ensure it captures all agent events.
@@ -98,10 +97,6 @@ This section validates the core onboarding workflow, the accuracy of the debug t
 - Implement the Latency Metrics UI once the logging handler is fixed.
 
 ## **Notes**
-
-**File Naming Convention:**
-
-[2026-03-04-dashboard-edge-cases.md](2026-03-02-local-agent-baseline.md)
 
 **UX Finding: Empty Audio Feedback (PASS)**
 
