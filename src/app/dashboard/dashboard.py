@@ -131,7 +131,7 @@ with st.sidebar:
             disabled=st.session_state.session_active,
         )
         ollama_model = st.text_input(
-            "Ollama model", value="gemma3:1b",
+            "Ollama model", value="gemma3:4b",
             disabled=st.session_state.session_active,
         )
     else:

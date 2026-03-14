@@ -1,0 +1,352 @@
+[
+    {
+        "session": 1,
+        "turns": [
+            {
+                "field": "name",
+                "latency": 0.8190431594848633,
+                "history_length": 4
+            },
+            {
+                "field": "employment_status",
+                "latency": 0.501863956451416,
+                "history_length": 6
+            },
+            {
+                "field": "skills",
+                "latency": 0.5835549831390381,
+                "history_length": 8
+            },
+            {
+                "field": "education",
+                "latency": 0.8316001892089844,
+                "history_length": 8
+            },
+            {
+                "field": "experience",
+                "latency": 0.6917879581451416,
+                "history_length": 8
+            },
+            {
+                "field": "job_preferences",
+                "latency": 1.6346077919006348,
+                "history_length": 8
+            }
+        ]
+    },
+    {
+        "session": 2,
+        "turns": [
+            {
+                "field": "name",
+                "latency": 0.43215274810791016,
+                "history_length": 4
+            },
+            {
+                "field": "employment_status",
+                "latency": 0.41776514053344727,
+                "history_length": 6
+            },
+            {
+                "field": "skills",
+                "latency": 0.4905538558959961,
+                "history_length": 8
+            },
+            {
+                "field": "education",
+                "latency": 0.5464930534362793,
+                "history_length": 8
+            },
+            {
+                "field": "experience",
+                "latency": 0.8511450290679932,
+                "history_length": 8
+            },
+            {
+                "field": "job_preferences",
+                "latency": 0.6009879112243652,
+                "history_length": 8
+            }
+        ]
+    },
+    {
+        "session": 3,
+        "turns": [
+            {
+                "field": "name",
+                "latency": 0.43036389350891113,
+                "history_length": 4
+            },
+            {
+                "field": "employment_status",
+                "latency": 0.37505197525024414,
+                "history_length": 6
+            },
+            {
+                "field": "skills",
+                "latency": 0.49481201171875,
+                "history_length": 8
+            },
+            {
+                "field": "education",
+                "latency": 0.5073988437652588,
+                "history_length": 8
+            },
+            {
+                "field": "experience",
+                "latency": 0.546658992767334,
+                "history_length": 8
+            },
+            {
+                "field": "job_preferences",
+                "latency": 1.3988165855407715,
+                "history_length": 8
+            }
+        ]
+    },
+    {
+        "session": 4,
+        "turns": [
+            {
+                "field": "name",
+                "latency": 0.42965102195739746,
+                "history_length": 4
+            },
+            {
+                "field": "employment_status",
+                "latency": 0.504716157913208,
+                "history_length": 6
+            },
+            {
+                "field": "skills",
+                "latency": 0.5894169807434082,
+                "history_length": 8
+            },
+            {
+                "field": "education",
+                "latency": 0.6826090812683105,
+                "history_length": 8
+            },
+            {
+                "field": "experience",
+                "latency": 0.7006940841674805,
+                "history_length": 8
+            },
+            {
+                "field": "job_preferences",
+                "latency": 1.5182621479034424,
+                "history_length": 8
+            }
+        ]
+    },
+    {
+        "session": 5,
+        "turns": [
+            {
+                "field": "name",
+                "latency": 0.4387369155883789,
+                "history_length": 4
+            },
+            {
+                "field": "employment_status",
+                "latency": 0.5021979808807373,
+                "history_length": 6
+            },
+            {
+                "field": "skills",
+                "latency": 0.5913817882537842,
+                "history_length": 8
+            },
+            {
+                "field": "education",
+                "latency": 0.6492130756378174,
+                "history_length": 8
+            },
+            {
+                "field": "experience",
+                "latency": 0.7053179740905762,
+                "history_length": 8
+            },
+            {
+                "field": "job_preferences",
+                "latency": 1.7003021240234375,
+                "history_length": 8
+            }
+        ]
+    },
+    {
+        "session": 6,
+        "turns": [
+            {
+                "field": "name",
+                "latency": 0.43786072731018066,
+                "history_length": 4
+            },
+            {
+                "field": "employment_status",
+                "latency": 0.4264109134674072,
+                "history_length": 6
+            },
+            {
+                "field": "skills",
+                "latency": 0.49095916748046875,
+                "history_length": 8
+            },
+            {
+                "field": "education",
+                "latency": 0.5030441284179688,
+                "history_length": 8
+            },
+            {
+                "field": "experience",
+                "latency": 0.6166760921478271,
+                "history_length": 8
+            },
+            {
+                "field": "job_preferences",
+                "latency": 1.4578969478607178,
+                "history_length": 8
+            }
+        ]
+    },
+    {
+        "session": 7,
+        "turns": [
+            {
+                "field": "name",
+                "latency": 0.46879076957702637,
+                "history_length": 4
+            },
+            {
+                "field": "employment_status",
+                "latency": 0.41486287117004395,
+                "history_length": 6
+            },
+            {
+                "field": "skills",
+                "latency": 0.5255899429321289,
+                "history_length": 8
+            },
+            {
+                "field": "education",
+                "latency": 0.5401110649108887,
+                "history_length": 8
+            },
+            {
+                "field": "experience",
+                "latency": 0.6701838970184326,
+                "history_length": 8
+            },
+            {
+                "field": "job_preferences",
+                "latency": 1.3333120346069336,
+                "history_length": 8
+            }
+        ]
+    },
+    {
+        "session": 8,
+        "turns": [
+            {
+                "field": "name",
+                "latency": 0.4408891201019287,
+                "history_length": 4
+            },
+            {
+                "field": "employment_status",
+                "latency": 0.3648371696472168,
+                "history_length": 6
+            },
+            {
+                "field": "skills",
+                "latency": 0.49924182891845703,
+                "history_length": 8
+            },
+            {
+                "field": "education",
+                "latency": 0.45784592628479004,
+                "history_length": 8
+            },
+            {
+                "field": "experience",
+                "latency": 0.5437891483306885,
+                "history_length": 8
+            },
+            {
+                "field": "job_preferences",
+                "latency": 1.347433090209961,
+                "history_length": 8
+            }
+        ]
+    },
+    {
+        "session": 9,
+        "turns": [
+            {
+                "field": "name",
+                "latency": 0.4322521686553955,
+                "history_length": 4
+            },
+            {
+                "field": "employment_status",
+                "latency": 0.51570725440979,
+                "history_length": 6
+            },
+            {
+                "field": "skills",
+                "latency": 0.5996639728546143,
+                "history_length": 8
+            },
+            {
+                "field": "education",
+                "latency": 0.6870250701904297,
+                "history_length": 8
+            },
+            {
+                "field": "experience",
+                "latency": 0.7059259414672852,
+                "history_length": 8
+            },
+            {
+                "field": "job_preferences",
+                "latency": 1.6804039478302002,
+                "history_length": 8
+            }
+        ]
+    },
+    {
+        "session": 10,
+        "turns": [
+            {
+                "field": "name",
+                "latency": 0.4390897750854492,
+                "history_length": 4
+            },
+            {
+                "field": "employment_status",
+                "latency": 0.5070738792419434,
+                "history_length": 6
+            },
+            {
+                "field": "skills",
+                "latency": 0.5957250595092773,
+                "history_length": 8
+            },
+            {
+                "field": "education",
+                "latency": 0.6602058410644531,
+                "history_length": 8
+            },
+            {
+                "field": "experience",
+                "latency": 0.7106561660766602,
+                "history_length": 8
+            },
+            {
+                "field": "job_preferences",
+                "latency": 1.6825840473175049,
+                "history_length": 8
+            }
+        ]
+    }
+]

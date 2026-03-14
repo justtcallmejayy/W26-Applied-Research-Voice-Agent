@@ -26,7 +26,15 @@ class LocalVoiceAgent:
     A voice agent that handles a full spoken conversation loop entirely on-device.
     """
 
-    def __init__(self, recording_duration=5, sample_rate=16000, whisper_model="base", ollama_model="gemma3:1b"):
+    def __init__(
+        self,
+        recording_duration=5,
+        sample_rate=16000,
+        whisper_model="base",
+        ollama_model="gemma3:4b",
+        ollama_timeout=120,
+        ollama_keep_alive="30m",
+    ):
         """
         Initialise the agent, loading all local models and verifying Ollama is reachable.
         
@@ -35,6 +43,8 @@ class LocalVoiceAgent:
             sample_rate (int): Microphone sample rate in Hz. Defaults to 16000.
             whisper_model (str): Whisper model size to load (e.g. "base", "small", "medium").
             ollama_model (str): Ollama model tag to use for response generation.
+            ollama_timeout (int): Request timeout in seconds for Ollama chat calls.
+            ollama_keep_alive (str): Keep model loaded between turns (e.g. "30m").
         """
         self.recording_duration = recording_duration
         self.sample_rate = sample_rate
@@ -47,6 +57,8 @@ class LocalVoiceAgent:
         logger.info("Checking Ollama connection...")
         self.ollama_model = ollama_model
         self.ollama_url = "http://localhost:11434/api/chat"
+        self.ollama_timeout = int(ollama_timeout)
+        self.ollama_keep_alive = ollama_keep_alive
         self._check_ollama()
         
         logger.info("Using gTTS for text-to-speech")
@@ -196,21 +208,38 @@ class LocalVoiceAgent:
         ] + self.conversation_history
         
         try:
-            response = requests.post(
-                self.ollama_url,
-                json={
-                    "model": self.ollama_model,
-                    "messages": messages,
-                    "stream": False
-                },
-                timeout=30
-            )
-            response.raise_for_status()
-            ai_response = response.json()["message"]["content"]
+            ai_response = None
+            for attempt in range(2):
+                try:
+                    response = requests.post(
+                        self.ollama_url,
+                        json={
+                            "model": self.ollama_model,
+                            "messages": messages,
+                            "stream": False,
+                            "keep_alive": self.ollama_keep_alive,
+                        },
+                        timeout=self.ollama_timeout,
+                    )
+                    response.raise_for_status()
+                    ai_response = response.json()["message"]["content"]
+                    break
+                except requests.exceptions.Timeout:
+                    if attempt == 0:
+                        logger.warning(
+                            "Ollama timed out once; retrying with same payload "
+                            f"(timeout={self.ollama_timeout}s)"
+                        )
+                        continue
+                    raise
             
         except requests.exceptions.RequestException as e:
             logger.error(f"Ollama error: {e}")
-            raise RuntimeError("Ollama not responding. Is it running?")
+            raise RuntimeError(
+                "Ollama request failed or timed out. "
+                f"Current timeout={self.ollama_timeout}s. "
+                "Try a larger timeout or a smaller model."
+            )
         
         self.conversation_history.append({
             "role": "assistant",
