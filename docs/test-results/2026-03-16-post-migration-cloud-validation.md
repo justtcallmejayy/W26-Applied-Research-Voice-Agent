@@ -126,7 +126,7 @@ The agent handled isolated off-topic responses reasonably well but lost field po
 
 ---
 
-## 8. Findings (if any)
+## 8. Findings
 
 ### 8.1 No Regressions Detected
 All four instruction-following metrics held at 100%/0% under the new pipeline architecture. The plug-and-play migration did not introduce any regressions in cloud agent behaviour.
@@ -148,29 +148,3 @@ The pipeline does not pass the current field to the LLM on each turn. Works reli
 Confirmation turn playback reached 27.13s in session 2 due to reading back all 6 fields. Expected behaviour but a UX consideration for the final implementation.
 
 ---
-
-### Findings
-
-#### Cloud Agent
-
-- Handles no audio well
-- Handles off topic comments well
-
-#### Local Agent
-- Local Agent context quality drops off around the experience field, seems likely due to cutting context short...
-
-- Tends to go off topic at the end of the conversation, the first half of the convo is good (around turn 3-4)
-
-- Specifically goes off topic around experience and job prefereces - typically goes to job preferences first and then experience, sometimes goes back to name turn.
-
-- Encountered an error where I said 'And', at the end of the recording, and the TTS failed: 
-
-    You said: 'And...' [2.60s]
-    [INFO] ollama_llm.py:78 - generate() - Generating response with local gemma3:1b...
-    [INFO] ollama_llm.py:88 - generate() - Assistant: '' [0.58s]
-    [INFO] pipeline.py:187 - _generate() - Trimmed conversation history to last 8 messages
-    [INFO] gtts_tts.py:44 - synthesize() - Converting response to speech with gTTS...
-    [ERROR] gtts_tts.py:55 - synthesize() - gTTS failed: No text to speak
-    [INFO] pipeline.py:166 - cleanup_file() - Removed temporary file
-    [ERROR] main.py:42 - main() - Unexpected error during onboarding: gTTS error (check internet connection): No text to speak
-
