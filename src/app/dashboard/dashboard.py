@@ -8,6 +8,8 @@ Interactive Streamlit dashboard for the voice agent onboarding prototype.
 import sys
 import logging
 import streamlit as st
+import soundfile as sf
+import numpy as np
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -249,6 +251,12 @@ with main_col:
                 st.session_state.status = "recording"
                 audio_data = agent.record_audio()
                 recorded_path = agent.save_audio(audio_data)
+
+                audio_arr, sample_rate = sf.read(recorded_path)
+                energy = np.abs(audio_arr).mean()
+                if energy < 0.01:
+                    agent.cleanup_file(recorded_path)
+                    raise ValueError(f"No audio detected (energy: {energy:.4f}). Please speak clearly and try again.")
 
                 st.session_state.status = "transcribing"
                 user_text = agent.transcribe_audio(recorded_path)
