@@ -19,7 +19,7 @@ def main():
     print("=" * 50)
 
     # Change to True/False depending on choice of local vs cloud agent
-    USE_LOCAL = True
+    USE_LOCAL = False
 
     logger = logging.getLogger(__name__)
 
