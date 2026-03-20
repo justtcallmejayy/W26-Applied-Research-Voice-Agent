@@ -31,7 +31,7 @@ class LocalVoiceAgent:
         recording_duration=5,
         sample_rate=16000,
         whisper_model="base",
-        ollama_model="gemma3:4b",
+        ollama_model="gemma3:1b",
         ollama_timeout=120,
         ollama_keep_alive="30m",
     ):

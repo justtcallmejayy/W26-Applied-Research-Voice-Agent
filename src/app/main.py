@@ -18,6 +18,7 @@ def main():
     print("VOICE ASSISTANT PROTOTYPE")
     print("=" * 50)
 
+<<<<<<< dev
     logger.info(f"Loading engines: {ENGINES}")
     stt = load_engine(ENGINES["stt"])
     llm = load_engine(ENGINES["llm"])
@@ -33,6 +34,27 @@ def main():
         sample_rate=AUDIO_SAMPLE_RATE,
         energy_threshold=ENERGY_THRESHOLD,
     )
+=======
+    # Change to True/False depending on choice of local vs cloud agent
+    USE_LOCAL = False
+
+    logger = logging.getLogger(__name__)
+
+    if USE_LOCAL:
+        from agent.local_voice_agent import LocalVoiceAgent
+        agent = LocalVoiceAgent()
+        logger = logging.getLogger("agent.local_voice_agent")
+        logger.info("Using LocalVoiceAgent")
+
+    else:
+        load_dotenv()
+        client = OpenAI()
+        from agent.voice_agent import VoiceAgent
+        agent = VoiceAgent(client=client)
+        logger = logging.getLogger("agent.voice_agent")
+        logger.info("Using VoiceAgent with OpenAI client")
+
+>>>>>>> main
 
     try:
         pipeline.run()
