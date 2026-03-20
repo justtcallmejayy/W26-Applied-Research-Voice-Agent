@@ -10,6 +10,7 @@ from pathlib import Path
 from datetime import datetime
 import sys
 
+_session_log_file = None
 
 def setup_logger(
     name: str,
@@ -27,11 +28,15 @@ def setup_logger(
     Returns:
         Configured logger instance
     """
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    log_dir = Path(__file__).parent.parent / "logs" / log_type
-    log_dir.mkdir(parents=True, exist_ok=True)
-    log_file = log_dir / f"{timestamp}.log"
-    
+
+    global _session_log_file
+
+    if _session_log_file is None:
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        log_dir = Path(__file__).parent.parent / "logs" / log_type
+        log_dir.mkdir(parents=True, exist_ok=True)
+        _session_log_file = log_dir / f"{timestamp}.log"
+
     logger = logging.getLogger(name)
     logger.setLevel(level)
     
@@ -42,7 +47,7 @@ def setup_logger(
         '[%(levelname)s] %(filename)s:%(lineno)d - %(funcName)s() - %(message)s'
     )
     
-    file_handler = logging.FileHandler(log_file)
+    file_handler = logging.FileHandler(_session_log_file)
     file_handler.setLevel(level)
     file_handler.setFormatter(formatter)
     
@@ -53,5 +58,4 @@ def setup_logger(
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
     
-    logger.info(f"Logging to: {log_file}")
     return logger

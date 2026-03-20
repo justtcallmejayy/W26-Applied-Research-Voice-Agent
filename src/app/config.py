@@ -5,25 +5,19 @@ config.py
 Central configuration file for the voice agent prototype.
 All tuneable constants are defined here to provide a single place to adjust agent behavior.
 
-NOTE: This file is intended to replace onboarding_config.py.
+NOTE: To switch providers, update the ENGINES dict below, no changes needed anywhere else.
 """
 
-# Agent selection
-USE_LOCAL = True 
 
 # Audio settings
-RECORDING_DURATION = 5          # seconds
-AUDIO_SAMPLE_RATE = 16000       # Hz
-ENERGY_THRESHOLD = 0.01         # Threshold for detecting silent audio
-
-# Models
-LOCAL_WHISPER_MODEL = "base"
-OLLAMA_MODEL = "gemma3:1b"
+RECORDING_DURATION = 5
+AUDIO_SAMPLE_RATE = 16000
+ENERGY_THRESHOLD = 0.01
 
 # Conversation history
 MAX_HISTORY_LENGTH = 8
 
-# Onboarding fields
+# Onboarding fields - defines what the agent collects and in what order
 ONBOARDING_FIELDS = [
     "name",
     "employment_status",
@@ -33,7 +27,7 @@ ONBOARDING_FIELDS = [
     "job_preferences"
 ]
 
-# System prompt
+# System prompt - controls agent tone and conversation behavior
 fields_list = ", ".join(ONBOARDING_FIELDS)
 SYSTEM_PROMPT = f"""You are a professional voice assistant helping users complete job onboarding.
 Your goal is to collect the following information in this exact order: {fields_list}.
@@ -57,3 +51,20 @@ After collecting all six fields:
 - End with exactly: Does everything look correct?
 - Wait for the user to confirm before ending the session"""
 
+
+# Engine configuration
+# To swap providers, change the dotted paths below.
+
+# Cloud
+ENGINES = {
+    "stt": "core.engines.stt.whisper_api.WhisperAPIEngine",
+    "llm": "core.engines.llm.openai_llm.OpenAILLMEngine",
+    "tts": "core.engines.tts.openai_tts.OpenAITTSEngine",
+}
+
+# Local
+# ENGINES = {
+#     "stt": "core.engines.stt.whisper_local.WhisperLocalEngine",
+#     "llm": "core.engines.llm.ollama_llm.OllamaLLMEngine",
+#     "tts": "core.engines.tts.gtts_tts.GTTSEngine",
+# }
