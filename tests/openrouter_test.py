@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 # Load .env from src/app/
 load_dotenv(Path(__file__).parent.parent / "src" / "app" / ".env")
 
-API_KEY = os.environ.get("OPENROUTER_KEY", "")
+API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 MODEL = "google/gemma-3-27b-it:free"
 PROMPT  = "Say hello and tell me what model you are."
 
