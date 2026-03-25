@@ -1,9 +1,7 @@
 
 # Setup
 
-This guide covers how to set up and run the voice agent prototype locally. Both the cloud agent and local agent are supported. Follow the steps below based on your preferred configuration.
-
-> This document is a work in progress and will be updated as the project evolves.
+This guide covers how to set up and run the voice agent prototype locally. Both cloud and local engine sets are supported. Provider selection is controlled by editing the `ENGINES` dict in `src/app/config.py`.
 
 ---
 
@@ -12,8 +10,8 @@ This guide covers how to set up and run the voice agent prototype locally. Both 
 Before setting up the project, ensure you have the following installed:
 
 - Python 3.10–3.13
-- FFmpeg
-- Ollama (required for local agent only)
+- FFmpeg (required for local Whisper transcription)
+- Ollama (required for local LLM only)
 
 ### Installing FFmpeg
 
@@ -30,7 +28,7 @@ Download from https://ffmpeg.org/download.html and add to PATH.
 sudo apt install ffmpeg
 ```
 
-### Installing Ollama (Local Agent Only)
+### Installing Ollama (Local LLM Only)
 Download and install from https://ollama.com, then pull the required model:
 ```bash
 ollama pull gemma3:1b
@@ -55,11 +53,33 @@ pip install -r requirements.txt
 
 ## Configuration
 
-### OpenAI API Key (Cloud Agent Only)
+### Provider Selection
+Open `src/app/config.py` and set the `ENGINES` dict to the desired provider set.
+
+**Cloud (OpenAI — default):**
+```python
+ENGINES = {
+    "stt": "core.engines.stt.whisper_api.WhisperAPIEngine",
+    "llm": "core.engines.llm.openai_llm.OpenAILLMEngine",
+    "tts": "core.engines.tts.openai_tts.OpenAITTSEngine",
+}
+```
+
+**Local (Ollama + on-device Whisper + gTTS):**
+```python
+ENGINES = {
+    "stt": "core.engines.stt.whisper_local.WhisperLocalEngine",
+    "llm": "core.engines.llm.ollama_llm.OllamaLLMEngine",
+    "tts": "core.engines.tts.gtts_tts.GTTSEngine",
+}
+```
+
+### OpenAI API Key (Cloud Engines Only)
 Create a `.env` file in `src/app/`:
 ```
 OPENAI_API_KEY=your_key_here
 ```
+This key is used by `WhisperAPIEngine`, `OpenAILLMEngine`, and `OpenAITTSEngine`.
 
 ---
 
@@ -83,7 +103,7 @@ streamlit run src/app/dashboard/dashboard.py
 Ensure your system grants microphone permissions to the terminal or IDE you are running from.
 
 **Ollama not responding**
-Make sure Ollama is running before starting the local agent:
+Make sure Ollama is running before starting the local engine set:
 ```bash
 ollama serve
 ```
@@ -96,3 +116,6 @@ ffmpeg -version
 
 **OpenAI API errors**
 Ensure your `.env` file exists at `src/app/.env` and contains a valid `OPENAI_API_KEY`.
+
+**gTTS errors**
+gTTS requires an active internet connection even when running the local engine set.

@@ -1,5 +1,5 @@
 # W26-Applied-Research-Voice-Agent
-Voice Agent for Candidate Onboarding &amp; Career Guidance 
+Voice Agent for Candidate Onboarding & Career Guidance
 > Applied Research 1, Winter 2026
 
 ---
@@ -21,13 +21,13 @@ python3 src/app/main.py
 streamlit run src/app/dashboard/dashboard.py
 ```
 
-> Set `USE_LOCAL = True` in `main.py` to use local models, or `False` for the OpenAI cloud-based agent.
+> To switch providers, edit the `ENGINES` dict in `src/app/config.py`. The cloud set (OpenAI) is active by default. Uncomment the local set to use Ollama + local Whisper + gTTS.
 
 ---
 
 ## Project Structure
 
-```bash
+```
 W26-Applied-Research-Voice-Agent/
 ├── README.md
 ├── requirements.txt                   # pip dependencies
@@ -40,21 +40,29 @@ W26-Applied-Research-Voice-Agent/
 ├── src/
 │   └── app/
 │       ├── main.py                    # CLI entry point
-│       ├── config.py                  # central configuration (integration pending)
-│       ├── agent/
-│       │   ├── voice_agent.py         # cloud agent
-│       │   ├── local_voice_agent.py   # local agent
-│       │   └── onboarding_config.py   # fields and system prompt
+│       ├── config.py                  # central configuration — engines, fields, prompt, audio
 │       ├── core/
+│       │   ├── pipeline.py            # OnboardingPipeline — provider-agnostic conversation loop
 │       │   └── engines/
-│       │       └── base.py            # abstract engine interfaces
+│       │       ├── base.py            # abstract STTEngine, LLMEngine, TTSEngine interfaces
+│       │       ├── llm/
+│       │       │   ├── openai_llm.py  # OpenAILLMEngine (GPT-4)
+│       │       │   └── ollama_llm.py  # OllamaLLMEngine (gemma3:1b)
+│       │       ├── stt/
+│       │       │   ├── whisper_api.py # WhisperAPIEngine (OpenAI Whisper-1)
+│       │       │   └── whisper_local.py # WhisperLocalEngine (on-device)
+│       │       └── tts/
+│       │           ├── openai_tts.py  # OpenAITTSEngine (TTS-1)
+│       │           └── gtts_tts.py    # GTTSEngine (gTTS)
 │       ├── dashboard/
 │       │   └── dashboard.py           # Streamlit dashboard
 │       └── utils/
 │           └── logger.py
 └── tests/
     ├── conftest.py
-    └── test_voice_agent.py
+    ├── test_voice_agent.py            # legacy tests (broken — imports removed agent/)
+    ├── stress_test.py
+    └── openrouter_test.py             # OpenRouter API key validation script
 ```
 
 ---
@@ -65,41 +73,32 @@ Each conversational turn follows this pipeline:
 
 | Step | Description |
 |------|-------------|
-| 1. Record | Capture 5 seconds of audio from the user's microphone |
+| 1. Record | Capture audio from the user's microphone (5s default) |
 | 2. Save | Write audio to a temporary `.wav` file on disk |
-| 3. Transcribe | Convert `.wav` to text via Whisper |
-| 4. Generate | Send transcription to LLM, receive conversational response |
-| 5. Synthesise | Convert response text to a `.mp3` via TTS |
-| 6. Play | Play `.mp3` through the user's speakers via pygame |
-| 7. Cleanup | Delete both temporary audio files |
+| 3. Energy check | Compute RMS amplitude — skip turn if below threshold (0.01) |
+| 4. Transcribe | Convert `.wav` to text via the configured STT engine |
+| 5. Generate | Send transcription + history to the configured LLM engine |
+| 6. Synthesise | Convert response text to audio via the configured TTS engine |
+| 7. Play | Play audio through the user's speakers via pygame |
+| 8. Cleanup | Delete both temporary audio files |
 
-The number of turns is driven by `ONBOARDING_FIELDS` in `onboarding_config.py`. The LLM is guided by `SYSTEM_PROMPT` to collect fields in order through natural conversation.
+The turn count is driven by `ONBOARDING_FIELDS` in `config.py`. Provider selection is controlled entirely by the `ENGINES` dict in `config.py` — no code changes required to swap STT, LLM, or TTS.
 
 ---
 
 ## Tech Stack
 
-### Local (USE_LOCAL = True)
-| Concern | Tool |
-|---------|------|
-| LLM inference | Ollama (`gemma3:1b`) |
-| Speech-to-text | `openai-whisper` (runs on-device) |
-| Text-to-speech | `gTTS` |
-| Audio recording | `sounddevice` + `soundfile` |
-| Audio playback | `pygame.mixer` |
-| Audio processing | `FFmpeg` (via Homebrew) |
-| Python | 3.10+ |
+| Concern | Cloud engines | Local engines |
+|---------|--------------|---------------|
+| LLM | OpenAI Chat Completions (`gpt-4`) | Ollama (`gemma3:1b`) |
+| Speech-to-text | OpenAI Whisper-1 API | `openai-whisper` (on-device) |
+| Text-to-speech | OpenAI TTS-1 API | gTTS (requires internet) |
+| Audio recording | `sounddevice` + `soundfile` | same |
+| Audio playback | `pygame.mixer` | same |
+| Dashboard | `streamlit` | same |
+| Python | 3.10–3.13 | same |
 
-
-### Cloud (USE_LOCAL = False)
-| Concern | Tool |
-|---------|------|
-| LLM inference | OpenAI Chat Completions (`gpt-4`) |
-| Speech-to-text | OpenAI Whisper API (`whisper-1`) |
-| Text-to-speech | OpenAI TTS API |
-| Audio recording | `sounddevice` + `soundfile` |
-| Audio playback | `pygame.mixer` |
-| Dashboard | `streamlit` |
+FFmpeg is required for local Whisper transcription.
 
 ---
 
@@ -113,8 +112,6 @@ The number of turns is driven by `ONBOARDING_FIELDS` in `onboarding_config.py`. 
 | `source venv/bin/activate` | Activate virtual environment |
 | `pip install -r requirements.txt` | Install dependencies |
 | `deactivate` | Deactivate virtual environment |
-| `rm -rf venv` | Remove virtual environment |
-| `pytest tests/ -v` | Run the test suite |
 
 ---
 
@@ -126,3 +123,4 @@ The number of turns is driven by `ONBOARDING_FIELDS` in `onboarding_config.py`. 
 | [Decisions](docs/DECISIONS.md) | Key technical decisions and reasoning |
 | [Setup](docs/SETUP.md) | Detailed setup, configuration, and troubleshooting |
 | [Test Results](docs/test-results/README.md) | All test reports and current performance metrics |
+
