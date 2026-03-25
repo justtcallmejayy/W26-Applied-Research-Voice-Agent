@@ -222,10 +222,10 @@ with main_col:
                 audio_data = pipeline.record_audio()
                 recorded_path = pipeline.save_audio(audio_data)
 
-                audio_arr, sample_rate = sf.read(recorded_path)
+                audio_arr, _ = sf.read(recorded_path)
                 energy = np.abs(audio_arr).mean()
-                if energy < 0.01:
-                    agent.cleanup_file(recorded_path)
+                if energy < ENERGY_THRESHOLD:
+                    pipeline.cleanup_file(recorded_path)
                     raise ValueError(f"No audio detected (energy: {energy:.4f}). Please speak clearly and try again.")
 
                 st.session_state.status = "transcribing"

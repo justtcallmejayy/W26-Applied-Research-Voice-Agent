@@ -32,5 +32,8 @@ Each test report includes:
 | [2026-03-10](2026-03-10-local-agent-prompt-improvements.md) | Local Agent Prompt Improvements | Emoji violations fixed (71% -> 0%) via positive constraints; order errors worsened (29% -> 55%); confirmation workflow (0%) requires pipeline-level fix |
 | [2026-03-11](2026-03-11-cloud-agent-prompt-validation.md) | Cloud Agent Updated Prompt Validation | No regressions on updated prompt; GPT-4 holds 100% across all metrics; confirms remaining local failures are model-scale issues |
 | [2026-03-12](2026-03-12-onboarding-field-order-validation.md) | Local Agent Field Order Validation | 12/15 sessions completed with correct field order; config-driven order change confirmed working; confirmation workflow observed in completed sessions |
+| [2026-03-16](2026-03-16-post-migration-cloud-validation.md) | Cloud Pipeline Post-Migration Validation | No regressions after plug-and-play migration; GPT-4 holds 100% across all metrics; per-turn timing consistent with March 11 baseline |
+| [2026-03-16](2026-03-16-post-migration-local-validation.md) | Local Pipeline Post-Migration Validation | 0% completion, 100% order errors under new pipeline; history trim at turn 4 confirmed as root cause; empty LLM response crash identified (new issue) |
+| [2026-03-25](2026-03-25-openrouter-llm-integration.md) | OpenRouter Free Model Validation | Tested which free OpenRouter models actually work with our pipeline |
 
 ---

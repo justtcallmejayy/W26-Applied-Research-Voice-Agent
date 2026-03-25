@@ -17,9 +17,23 @@ This document records the key technical decisions made throughout the project an
 
 ---
 
-## Dual Agent Architecture
-**Decision:** Implement two separate agent implementations, a cloud agent using OpenAI services and a local agent running entirely on-device.
-**Reason:** OpenAI account sharing across the team was impractical due to privacy and cost concerns. A service outage mid-Week 4 also blocked cloud development entirely. The local agent gives all team members a working implementation without API credentials and satisfies the client's plug-and-play requirement.
+## Dual Agent Architecture (Weeks 1–10)
+**Decision:** Implement two separate agent implementations, a cloud agent (`VoiceAgent`) and a local agent (`LocalVoiceAgent`), sharing a common interface.
+**Reason:** OpenAI account sharing across the team was impractical due to privacy and cost concerns. A service outage mid-Week 4 also blocked cloud development entirely. The local agent gave all team members a working implementation without API credentials and satisfied the client's plug-and-play requirement.
+**Status:** Superseded in Week 11 by the plug-and-play pipeline migration (see below). Both agent classes and `onboarding_config.py` have been removed.
+
+---
+
+## Plug-and-Play Pipeline Migration (Week 11)
+**Decision:** Replace `VoiceAgent` and `LocalVoiceAgent` with a single provider-agnostic `OnboardingPipeline` that accepts injected STT, LLM, and TTS engine instances.
+**Reason:** The dual agent design required duplicating the full pipeline (record → energy check → transcribe → generate → tts → play → cleanup) in two separate classes. Any change to pipeline logic had to be applied twice. The plug-and-play layer eliminates duplication, makes provider switching a config-only change, and satisfies the client's requirement more directly than the dual class approach.
+**Implementation:** `core/pipeline.py` contains `OnboardingPipeline`. `core/engines/base.py` defines abstract `STTEngine`, `LLMEngine`, `TTSEngine` interfaces. Six concrete engine classes implement these interfaces across `core/engines/stt/`, `core/engines/llm/`, and `core/engines/tts/`.
+
+---
+
+## ENGINES Dict over USE_LOCAL Flag
+**Decision:** Control provider selection via an `ENGINES` dict of dotted import paths in `config.py` rather than a boolean `USE_LOCAL` flag in `main.py`.
+**Reason:** A boolean flag can only select between two hardcoded sets of providers. The dotted path dict allows any combination of engines to be activated without modifying pipeline or entry point code, and makes the swap a single-file config change rather than a code change. `load_engine()` resolves dotted paths at runtime using `importlib.import_module`.
 
 ---
 
@@ -36,13 +50,6 @@ This document records the key technical decisions made throughout the project an
 ---
 
 ## Central config.py
-**Decision:** Consolidate all tuneable constants, model settings, onboarding fields, and system prompt into a single config.py file.
-**Reason:** Constants were previously spread across main.py, voice_agent.py, local_voice_agent.py, and onboarding_config.py. A single configuration file supports the client's plug-and-play requirement and makes the system easier to maintain and hand off.
-
----
-
-## Abstract Engine Interfaces
-**Decision:** Define abstract STTEngine, LLMEngine, and TTSEngine base classes in core/engines/base.py.
-**Reason:** The client's plug-and-play requirement means STT, LLM, and TTS providers must be swappable without modifying pipeline code. Abstract interfaces define the contract any provider must implement, allowing concrete implementations to be swapped freely once integration is complete.
-
----
+**Decision:** Consolidate all tuneable constants, model settings, onboarding fields, and system prompt into a single `config.py` file. Provider switching is done by editing the `ENGINES` dict — no changes needed elsewhere.
+**Reason:** Constants were previously spread across `main.py`, `voice_agent.py`, `local_voice_agent.py`, and `onboarding_config.py`. A single configuration file supports the client's plug-and-play requirement and makes the system easier to maintain and hand off.
+**Status:** Fully integrated. `main.py` and `dashboard.py` both import from `config.py`. `onboarding_config.py` has been removed. Note: `pipeline.py` still hardcodes `8` for history trim length instead of importing `MAX_HISTORY_LENGTH`, and `dashboard.py` hardcodes `0.01` for the energy threshold instead of using `ENERGY_THRESHOLD`.

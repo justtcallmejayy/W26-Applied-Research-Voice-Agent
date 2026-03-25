@@ -9,15 +9,47 @@ NOTE: To switch providers, update the ENGINES dict below, no changes needed anyw
 """
 
 
-# Audio settings
+# ===================================================================================
+# AUDIO SETTINGS
+# ===================================================================================
 RECORDING_DURATION = 5
 AUDIO_SAMPLE_RATE = 16000
 ENERGY_THRESHOLD = 0.01
 
-# Conversation history
+
+# ===================================================================================
+# CONVERSATION HISTORY
+# ===================================================================================
 MAX_HISTORY_LENGTH = 8
 
-# Onboarding fields - defines what the agent collects and in what order
+
+# ===================================================================================
+# OPENAI LLM PARAMETERS
+# ===================================================================================
+LLM_MAX_TOKENS = 150
+LLM_TEMPERATURE = 0.7
+LLM_PRESENCE_PENALTY = 0.5
+LLM_FREQUENCY_PENALTY = 0.2
+
+
+# ===================================================================================
+# OPENROUTER MODEL AND PARAMETER CONSTANTS
+# ===================================================================================
+OPENROUTER_FREE_MODELS = {
+    "stepfun-flash":      "stepfun/step-3.5-flash:free",
+    "nemotron-9b":        "nvidia/nemotron-nano-9b-v2:free",        # May return None
+    "nemotron-30b":       "nvidia/nemotron-3-nano-30b-a3b:free",
+    "nemotron-120b":      "nvidia/nemotron-3-super-120b-a12b:free",
+    "glm-4.5-air":        "z-ai/glm-4.5-air:free",
+    "lfm-instruct":    "liquid/lfm-2.5-1.2b-instruct:free",
+    "trinity-large":   "arcee-ai/trinity-large-preview:free",
+}
+OPENROUTER_MODEL = OPENROUTER_FREE_MODELS["stepfun-flash"]
+
+
+# ===================================================================================
+# ONBOARDING FIELDS
+# ===================================================================================
 ONBOARDING_FIELDS = [
     "name",
     "employment_status",
@@ -27,7 +59,10 @@ ONBOARDING_FIELDS = [
     "job_preferences"
 ]
 
-# System prompt - controls agent tone and conversation behavior
+
+# ===================================================================================
+# SYSTEM PROMPT
+# ===================================================================================
 fields_list = ", ".join(ONBOARDING_FIELDS)
 SYSTEM_PROMPT = f"""You are a professional voice assistant helping users complete job onboarding.
 Your goal is to collect the following information in this exact order: {fields_list}.
@@ -52,15 +87,16 @@ After collecting all six fields:
 - Wait for the user to confirm before ending the session"""
 
 
-# Engine configuration
-# To swap providers, change the dotted paths below.
+# ===================================================================================
+# ENGINE CONFIGURATION - Swap providers by changing dotted paths below
+# ===================================================================================
 
 # Cloud
-ENGINES = {
-    "stt": "core.engines.stt.whisper_api.WhisperAPIEngine",
-    "llm": "core.engines.llm.openai_llm.OpenAILLMEngine",
-    "tts": "core.engines.tts.openai_tts.OpenAITTSEngine",
-}
+# ENGINES = {
+#     "stt": "core.engines.stt.whisper_api.WhisperAPIEngine",
+#     "llm": "core.engines.llm.openai_llm.OpenAILLMEngine",
+#     "tts": "core.engines.tts.openai_tts.OpenAITTSEngine",
+# }
 
 # Local
 # ENGINES = {
@@ -68,3 +104,10 @@ ENGINES = {
 #     "llm": "core.engines.llm.ollama_llm.OllamaLLMEngine",
 #     "tts": "core.engines.tts.gtts_tts.GTTSEngine",
 # }
+
+ENGINES = {
+    "stt": "core.engines.stt.whisper_api.WhisperAPIEngine",
+    "llm": "core.engines.llm.openrouter_llm.OpenRouterLLMEngine",
+    "tts": "core.engines.tts.openai_tts.OpenAITTSEngine",
+}
+

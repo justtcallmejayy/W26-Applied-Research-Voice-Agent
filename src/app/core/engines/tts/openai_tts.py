@@ -58,7 +58,8 @@ class OpenAITTSEngine(TTSEngine):
                 voice=self._voice,
                 input=text,
             )
-            response.stream_to_file(filepath)       # TODO: Deprecated!
+            with open(filepath, "wb") as f:
+                    f.write(response.content)
             logger.info(f"TTS complete! [{time.time() - t:.2f}s]")
             return filepath
         except Exception as e:
