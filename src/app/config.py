@@ -17,6 +17,12 @@ ENERGY_THRESHOLD = 0.01
 # Conversation history
 MAX_HISTORY_LENGTH = 8
 
+# OpenAI LLM Parameters
+LLM_MAX_TOKENS = 150
+LLM_TEMPERATURE = 0.7
+LLM_PRESENCE_PENALTY = 0.5
+LLM_FREQUENCY_PENALTY = 0.2
+
 # Onboarding fields - defines what the agent collects and in what order
 ONBOARDING_FIELDS = [
     "name",

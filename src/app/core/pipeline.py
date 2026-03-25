@@ -16,6 +16,7 @@ import numpy as np
 import sounddevice as sd
 import soundfile as sf
 from core.engines.base import STTEngine, LLMEngine, TTSEngine
+from config import MAX_HISTORY_LENGTH
 from utils.logger import setup_logger
 
 logger = setup_logger(__name__, log_type="pipeline")
@@ -182,7 +183,7 @@ class OnboardingPipeline:
         messages = [{"role": "system", "content": self.system_prompt}] + self.conversation_history
         response = self.llm.generate(messages)
         self.conversation_history.append({"role": "assistant", "content": response})
-        if len(self.conversation_history) > 8:
+        if len(self.conversation_history) > MAX_HISTORY_LENGTH:
             self.conversation_history = self.conversation_history[-8:]
             logger.info("Trimmed conversation history to last 8 messages")
         return response

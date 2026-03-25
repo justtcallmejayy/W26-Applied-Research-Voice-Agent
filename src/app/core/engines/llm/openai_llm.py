@@ -8,6 +8,7 @@ Requires OPENAI_API_KEY to be set in .env.
 """
 
 import time
+from config import LLM_MAX_TOKENS, LLM_TEMPERATURE, LLM_PRESENCE_PENALTY, LLM_FREQUENCY_PENALTY
 from core.engines.base import LLMEngine
 from utils.logger import setup_logger
 
@@ -48,10 +49,10 @@ class OpenAILLMEngine(LLMEngine):
             response = self._client.chat.completions.create(
                 model=self._model,
                 messages=messages,
-                max_tokens=150,
-                temperature=0.7,
-                presence_penalty=0.5,
-                frequency_penalty=0.2,
+                max_tokens=LLM_MAX_TOKENS,
+                temperature=LLM_TEMPERATURE,
+                presence_penalty=LLM_PRESENCE_PENALTY,
+                frequency_penalty=LLM_FREQUENCY_PENALTY,
             )
             ai_response = response.choices[0].message.content
             logger.info(f"Assistant: '{ai_response}' [{time.time() - t:.2f}s]")
