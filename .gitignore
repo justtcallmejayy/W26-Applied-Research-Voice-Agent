@@ -11,6 +11,9 @@ __pycache__/
 ### Virtual Envrionment
 venv/
 
+### Audio fixtures
+audio/
+
 ### Python
 *.pyc
 *.pyo
