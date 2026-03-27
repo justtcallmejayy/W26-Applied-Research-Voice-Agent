@@ -33,6 +33,12 @@ LLM_FREQUENCY_PENALTY = 0.2
 
 
 # ===================================================================================
+# GROQ MODEL CONSTANTS
+# ===================================================================================
+GROQ_MODEL = "llama-3.1-8b-instant"
+
+
+# ===================================================================================
 # OPENROUTER MODEL AND PARAMETER CONSTANTS
 # ===================================================================================
 OPENROUTER_FREE_MODELS = {
@@ -105,9 +111,16 @@ After collecting all six fields:
 #     "tts": "core.engines.tts.gtts_tts.GTTSEngine",
 # }
 
+# Cloud/local hybrid (Groq LLM + local STT/TTS)
 ENGINES = {
-    "stt": "core.engines.stt.whisper_api.WhisperAPIEngine",
-    "llm": "core.engines.llm.openrouter_llm.OpenRouterLLMEngine",
-    "tts": "core.engines.tts.openai_tts.OpenAITTSEngine",
+    "stt": "core.engines.stt.whisper_local.WhisperLocalEngine",
+    "llm": "core.engines.llm.groq_llm.GroqLLMEngine",
+    "tts": "core.engines.tts.gtts_tts.GTTSEngine",
 }
+
+# ENGINES = {
+#     "stt": "core.engines.stt.whisper_api.WhisperAPIEngine",
+#     "llm": "core.engines.llm.openrouter_llm.OpenRouterLLMEngine",
+#     "tts": "core.engines.tts.openai_tts.OpenAITTSEngine",
+# }
 
