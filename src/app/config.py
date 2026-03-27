@@ -33,6 +33,14 @@ LLM_FREQUENCY_PENALTY = 0.2
 
 
 # ===================================================================================
+# OPENAI TTS PARAMETERS
+# ===================================================================================
+# Available voices: alloy, echo, fable, onyx, nova, shimmer
+TTS_VOICE = "alloy"
+TTS_MODEL = "tts-1"
+
+
+# ===================================================================================
 # GROQ MODEL CONSTANTS
 # ===================================================================================
 GROQ_MODEL = "llama-3.1-8b-instant"
@@ -98,11 +106,11 @@ After collecting all six fields:
 # ===================================================================================
 
 # Cloud
-# ENGINES = {
-#     "stt": "core.engines.stt.whisper_api.WhisperAPIEngine",
-#     "llm": "core.engines.llm.openai_llm.OpenAILLMEngine",
-#     "tts": "core.engines.tts.openai_tts.OpenAITTSEngine",
-# }
+ENGINES = {
+    "stt": "core.engines.stt.whisper_api.WhisperAPIEngine",
+    "llm": "core.engines.llm.openai_llm.OpenAILLMEngine",
+    "tts": "core.engines.tts.openai_tts.OpenAITTSEngine",
+}
 
 # Local
 # ENGINES = {
@@ -111,12 +119,12 @@ After collecting all six fields:
 #     "tts": "core.engines.tts.gtts_tts.GTTSEngine",
 # }
 
-# Cloud/local hybrid (Groq LLM + local STT/TTS)
-ENGINES = {
-    "stt": "core.engines.stt.whisper_local.WhisperLocalEngine",
-    "llm": "core.engines.llm.groq_llm.GroqLLMEngine",
-    "tts": "core.engines.tts.gtts_tts.GTTSEngine",
-}
+# Hybrid (Groq LLM + local STT/TTS)
+# ENGINES = {
+#     "stt": "core.engines.stt.whisper_local.WhisperLocalEngine",
+#     "llm": "core.engines.llm.groq_llm.GroqLLMEngine",
+#     "tts": "core.engines.tts.gtts_tts.GTTSEngine",
+# }
 
 # ENGINES = {
 #     "stt": "core.engines.stt.whisper_api.WhisperAPIEngine",

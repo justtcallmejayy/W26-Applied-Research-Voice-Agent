@@ -1,5 +1,5 @@
 """
-tests.pipeline_test
+tests.unit.test_pipeline
 
 Unit tests related to the OnboardingPipeline.
 """

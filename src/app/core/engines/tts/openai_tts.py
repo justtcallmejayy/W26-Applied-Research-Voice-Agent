@@ -11,6 +11,7 @@ import time
 import tempfile
 from core.engines.base import TTSEngine
 from utils.logger import setup_logger
+from config import TTS_MODEL, TTS_VOICE
 
 logger = setup_logger(__name__, log_type="pipeline")
 
@@ -18,7 +19,7 @@ logger = setup_logger(__name__, log_type="pipeline")
 class OpenAITTSEngine(TTSEngine):
     """Synthesises speech via the OpenAI TTS-1 API."""
 
-    def __init__(self, model: str = "tts-1", voice: str = "alloy"):
+    def __init__(self, model: str = TTS_MODEL, voice: str = TTS_VOICE):
         """
         Initialise the OpenAI client and load the API key from .env.
 
