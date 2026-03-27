@@ -21,7 +21,7 @@ python3 src/app/main.py
 streamlit run src/app/dashboard/dashboard.py
 ```
 
-> To switch providers, edit the `ENGINES` dict in `src/app/config.py`. The cloud set (OpenAI) is active by default. Uncomment the local set to use Ollama + local Whisper + gTTS.
+> To switch providers, edit the `ENGINES` dict in `src/app/config.py`. Current default uses OpenRouter for LLM. You can also switch to OpenAI, Groq, or local Ollama.
 
 ---
 
@@ -90,7 +90,7 @@ The turn count is driven by `ONBOARDING_FIELDS` in `config.py`. Provider selecti
 
 | Concern | Cloud engines | Local engines |
 |---------|--------------|---------------|
-| LLM | OpenAI Chat Completions (`gpt-4`) | Ollama (`gemma3:1b`) |
+| LLM | OpenAI (`gpt-4`), OpenRouter (free model set), Groq (`llama-3.1-8b-instant`) | Ollama (`gemma3:1b`) |
 | Speech-to-text | OpenAI Whisper-1 API | `openai-whisper` (on-device) |
 | Text-to-speech | OpenAI TTS-1 API | gTTS (requires internet) |
 | Audio recording | `sounddevice` + `soundfile` | same |
@@ -99,6 +99,8 @@ The turn count is driven by `ONBOARDING_FIELDS` in `config.py`. Provider selecti
 | Python | 3.10–3.13 | same |
 
 FFmpeg is required for local Whisper transcription.
+
+For Groq LLM mode, set `GROQ_API_KEY` in `src/app/.env`.
 
 ---
 
