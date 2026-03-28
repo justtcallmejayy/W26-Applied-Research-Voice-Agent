@@ -60,9 +60,13 @@ W26-Applied-Research-Voice-Agent/
 │           └── logger.py
 └── tests/
     ├── conftest.py
-    ├── test_voice_agent.py            # legacy tests (broken — imports removed agent/)
-    ├── stress_test.py
-    └── openrouter_test.py             # OpenRouter API key validation script
+    ├── audio/                         # gitignored audio fixtures for integration tests
+    │   └── test_audio.py         # helper script to record test audio
+    ├── unit/
+    │   └── test_pipeline.py           # unit tests for OnboardingPipeline
+    ├── integration/
+    │   └── test_pipeline_sess.py      # integration tests with pre-recorded audio
+    └── old/                           # legacy tests kept for reference
 ```
 
 ---
@@ -114,6 +118,9 @@ For Groq LLM mode, set `GROQ_API_KEY` in `src/app/.env`.
 | `source venv/bin/activate` | Activate virtual environment |
 | `pip install -r requirements.txt` | Install dependencies |
 | `deactivate` | Deactivate virtual environment |
+| `pytest tests/unit/ -v` | Run unit tests |
+| `pytest tests/integration/ -v -s` | Run integration tests |
+| `pytest tests/ -v` | Run all tests |
 
 ---
 

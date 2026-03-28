@@ -1,4 +1,3 @@
-
 """
 src.app.core.pipeline
 
@@ -182,10 +181,15 @@ class OnboardingPipeline:
         self.conversation_history.append({"role": "user", "content": user_input})
         messages = [{"role": "system", "content": self.system_prompt}] + self.conversation_history
         response = self.llm.generate(messages)
+        if not response or not response.strip():
+            logger.warning("LLM returned empty response, skipping turn...")
+            self.conversation_history.pop()
+            return ""
+
         self.conversation_history.append({"role": "assistant", "content": response})
         if len(self.conversation_history) > MAX_HISTORY_LENGTH:
-            self.conversation_history = self.conversation_history[-8:]
-            logger.info("Trimmed conversation history to last 8 messages")
+            self.conversation_history = self.conversation_history[-MAX_HISTORY_LENGTH:]
+            logger.info(f"Trimmed conversation history to last {MAX_HISTORY_LENGTH} messages")
         return response
 
     def _speak(self, text: str):
@@ -232,7 +236,12 @@ class OnboardingPipeline:
                     logger.warning(f"Empty transcription on turn {turn + 1}, skipping...")
                     continue
 
-                response = self._generate(user_text)
+                # response = self._generate(user_text)
+                response = self._generate(f"[Collecting: {current_field}]\n{user_text}")
+                if not response:
+                    logger.warning(f"Skipping TTS on turn {turn + 1} - empty LLM response")
+                    continue
+
                 self._speak(response)
             finally:
                 self.cleanup_file(recorded_path)
