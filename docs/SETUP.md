@@ -1,4 +1,3 @@
-
 # Setup
 
 This guide covers how to set up and run the voice agent prototype locally. Both cloud and local engine sets are supported. Provider selection is controlled by editing the `ENGINES` dict in `src/app/config.py`.
@@ -56,7 +55,7 @@ pip install -r requirements.txt
 ### Provider Selection
 Open `src/app/config.py` and set the `ENGINES` dict to the desired provider set.
 
-**Cloud (OpenAI — default):**
+**Cloud (OpenAI):**
 ```python
 ENGINES = {
     "stt": "core.engines.stt.whisper_api.WhisperAPIEngine",
@@ -74,25 +73,66 @@ ENGINES = {
 }
 ```
 
-### OpenAI API Key (Cloud Engines Only)
+**OpenRouter:**
+```python
+ENGINES = {
+    "stt": "core.engines.stt.whisper_local.WhisperLocalEngine",
+    "llm": "core.engines.llm.openrouter_llm.OpenRouterLLMEngine",
+    "tts": "core.engines.tts.gtts_tts.GTTSEngine",
+}
+```
+
+### API Keys
 Create a `.env` file in `src/app/`:
 ```
 OPENAI_API_KEY=your_key_here
+OPENROUTER_API_KEY=your_key_here
 ```
-This key is used by `WhisperAPIEngine`, `OpenAILLMEngine`, and `OpenAITTSEngine`.
+
+`OPENAI_API_KEY` is used by `WhisperAPIEngine`, `OpenAILLMEngine`, and `OpenAITTSEngine`.
+`OPENROUTER_API_KEY` is used by `OpenRouterLLMEngine`.
 
 ---
 
 ## Running the Project
 
-### CLI
+### CLI Voice Agent
 ```bash
 python3 src/app/main.py
 ```
 
-### Dashboard
+### Streamlit Dashboard
 ```bash
 streamlit run src/app/dashboard/dashboard.py
+```
+
+### REST API
+```bash
+cd src
+python3 api/main.py
+```
+
+The API runs on `http://localhost:8000` by default. Interactive docs are available at `http://localhost:8000/docs`.
+
+---
+
+## Running Tests
+
+```bash
+# Unit tests only — no API keys or audio fixtures required
+pytest tests/unit/ -v
+
+# Integration tests — requires API keys in src/app/.env and audio fixtures in tests/audio/
+pytest tests/integration/ -v -s
+
+# All tests
+pytest tests/ -v
+```
+
+### Recording Audio Fixtures for Integration Tests
+Integration tests require pre-recorded WAV files in `tests/audio/` (gitignored). Record them using the helper script:
+```bash
+python tests/audio/record_fixtures.py
 ```
 
 ---
@@ -117,5 +157,17 @@ ffmpeg -version
 **OpenAI API errors**
 Ensure your `.env` file exists at `src/app/.env` and contains a valid `OPENAI_API_KEY`.
 
+**OpenRouter rate limit (429)**
+The free tier allows 50 requests per day across all free models. If the limit is hit, the cap resets at midnight UTC. For automated testing, mock the LLM engine instead of making real API calls.
+
+**API import errors on startup**
+If running the API with `python3 api/main.py` from inside `src/`, the `sys.path` inserts at the top of `api/main.py` handle path resolution automatically. If running from the project root, use:
+```bash
+PYTHONPATH=src:src/app python -m uvicorn api.main:app --reload --port 8000
+```
+
 **gTTS errors**
 gTTS requires an active internet connection even when running the local engine set.
+
+**FP16 warning from Whisper**
+`UserWarning: FP16 is not supported on CPU; using FP32 instead` is harmless — Whisper falls back to FP32 on CPU automatically.
