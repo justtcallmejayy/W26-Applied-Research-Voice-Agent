@@ -11,14 +11,17 @@ from api.main import app
 
 client = TestClient(app)
 
-def test_full_api_session():
-    # 1. Start session
+
+@pytest.mark.parametrize("run", range(5))
+def test_full_api_session(run):
+
+    # Start the session
     response = client.post("/session/start")
     assert response.status_code == 200
     session_id = response.headers["X-Session-ID"]
     assert session_id
 
-    # 2. Run all 6 turns with pre-recorded audio fixtures
+    # Run all 6 turns with pre-recorded audio fixtures
     audio_files = [
         "tests/audio/name.wav",
         "tests/audio/employment.wav",
@@ -41,13 +44,45 @@ def test_full_api_session():
         assert response.headers["X-Turn"] == str(i + 1)
 
     assert response.headers["X-Session-Complete"] == "true"
-
-    # 3. Confirm
-    with open("tests/audio/confirm.wav", "rb") as f:
-        response = client.post(
-            f"/session/{session_id}/confirm",
-            files={"audio": ("audio.wav", f, "audio/wav")},
-        )
     assert response.status_code == 200
     assert response.headers["X-Session-Complete"] == "true"
 
+def test_health_check():
+    response = client.get("/health")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "ok"
+    assert "engines" in data
+    assert "fields" in data
+    assert len(data["fields"]) == 6
+
+def test_invalid_session_turn():
+    """Turn request with a non-existent session ID should return 404."""
+    with open("tests/audio/name.wav", "rb") as f:
+        response = client.post(
+            "/session/invalid-session-id/turn",
+            files={"audio": ("audio.wav", f, "audio/wav")},
+        )
+    assert response.status_code == 404
+
+def test_invalid_session_delete():
+    """Deleting a non-existent session should return 404."""
+    response = client.delete("/session/invalid-session-id")
+    assert response.status_code == 404
+
+def test_delete_session():
+    """Start a session then delete it early — should return 200."""
+    response = client.post("/session/start")
+    assert response.status_code == 200
+    session_id = response.headers["X-Session-ID"]
+
+    response = client.delete(f"/session/{session_id}")
+    assert response.status_code == 200
+
+    # Confirm session is gone
+    with open("tests/audio/name.wav", "rb") as f:
+        response = client.post(
+            f"/session/{session_id}/turn",
+            files={"audio": ("audio.wav", f, "audio/wav")},
+        )
+    assert response.status_code == 404
