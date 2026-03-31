@@ -58,7 +58,7 @@ OPENROUTER_FREE_MODELS = {
     "lfm-instruct":    "liquid/lfm-2.5-1.2b-instruct:free",
     "trinity-large":   "arcee-ai/trinity-large-preview:free",
 }
-OPENROUTER_MODEL = OPENROUTER_FREE_MODELS["stepfun-flash"]
+OPENROUTER_MODEL = OPENROUTER_FREE_MODELS["trinity-large"]
 
 
 # ===================================================================================
@@ -106,18 +106,18 @@ After collecting all six fields:
 # ===================================================================================
 
 # Cloud
-ENGINES = {
-    "stt": "core.engines.stt.whisper_api.WhisperAPIEngine",
-    "llm": "core.engines.llm.openai_llm.OpenAILLMEngine",
-    "tts": "core.engines.tts.openai_tts.OpenAITTSEngine",
-}
+# ENGINES = {
+#     "stt": "core.engines.stt.whisper_api.WhisperAPIEngine",
+#     "llm": "core.engines.llm.openai_llm.OpenAILLMEngine",
+#     "tts": "core.engines.tts.openai_tts.OpenAITTSEngine",
+# }
 
 # Local
-# ENGINES = {
-#     "stt": "core.engines.stt.whisper_local.WhisperLocalEngine",
-#     "llm": "core.engines.llm.ollama_llm.OllamaLLMEngine",
-#     "tts": "core.engines.tts.gtts_tts.GTTSEngine",
-# }
+ENGINES = {
+    "stt": "core.engines.stt.whisper_local.WhisperLocalEngine",
+    "llm": "core.engines.llm.ollama_llm.OllamaLLMEngine",
+    "tts": "core.engines.tts.gtts_tts.GTTSEngine",
+}
 
 # Hybrid (Groq LLM + local STT/TTS)
 # ENGINES = {
