@@ -6,11 +6,16 @@ Exposes endpoints for starting a session and processing each turn.
 """
 
 import os
+import sys
 import uuid
 import tempfile
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(__file__)), "app"))
+
 
 from app.config import (
     ENGINES,
@@ -242,3 +247,9 @@ def health_check():
         "fields": ONBOARDING_FIELDS,
         "active_sessions": len(sessions),
     }
+
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("api.main:app", host="0.0.0.0", port=8000, reload=True)
