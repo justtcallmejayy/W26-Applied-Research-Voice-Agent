@@ -8,15 +8,16 @@ import os
 import pytest
 from src.app.core.pipeline import OnboardingPipeline
 from src.app.config import SYSTEM_PROMPT, ONBOARDING_FIELDS
-from src.app.core.engines.stt.whisper_api import WhisperAPIEngine
-from src.app.core.engines.llm.openai_llm import OpenAILLMEngine
-from src.app.core.engines.tts.openai_tts import OpenAITTSEngine
+
+from src.app.core.engines.llm.openrouter_llm import OpenRouterLLMEngine
+from src.app.core.engines.tts.gtts_tts import GTTSEngine
+from src.app.core.engines.stt.whisper_local import WhisperLocalEngine
 
 def test_full_session_with_prerecorded_audio():
     """Run a full onboarding session using pre-recorded audio files."""
-    stt = WhisperAPIEngine()
-    llm = OpenAILLMEngine()
-    tts = OpenAITTSEngine()
+    stt = WhisperLocalEngine()
+    llm = OpenRouterLLMEngine()
+    tts = GTTSEngine()
 
     pipeline = OnboardingPipeline(
         stt=stt,
@@ -38,8 +39,11 @@ def test_full_session_with_prerecorded_audio():
     for f in audio_files:
         if not os.path.exists(f):
             pytest.skip(f"Audio fixture missing: {f} — record files to run integration tests")
-
+    
     results = []
+
+    pipeline._generate("Begin the onboarding conversation.")
+    
     for i, audio_path in enumerate(audio_files):
         user_text = stt.transcribe(audio_path)
         current_field = ONBOARDING_FIELDS[i]

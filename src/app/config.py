@@ -58,7 +58,7 @@ OPENROUTER_FREE_MODELS = {
     "lfm-instruct":    "liquid/lfm-2.5-1.2b-instruct:free",
     "trinity-large":   "arcee-ai/trinity-large-preview:free",
 }
-OPENROUTER_MODEL = OPENROUTER_FREE_MODELS["stepfun-flash"]
+OPENROUTER_MODEL = OPENROUTER_FREE_MODELS["trinity-large"]
 
 
 # ===================================================================================
