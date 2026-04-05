@@ -28,7 +28,7 @@ class TTSEngine(ABC):
     def synthesize(self, text: str) -> str: ...
 ```
 
-Seven concrete engine implementations exist:
+Eight concrete engine implementations exist:
 
 | Engine class | Module | Provider |
 |---|---|---|
@@ -36,11 +36,12 @@ Seven concrete engine implementations exist:
 | `WhisperLocalEngine` | `core/engines/stt/whisper_local.py` | `openai-whisper` on-device |
 | `OpenAILLMEngine` | `core/engines/llm/openai_llm.py` | OpenAI GPT-4 |
 | `OllamaLLMEngine` | `core/engines/llm/ollama_llm.py` | Ollama (`gemma3:1b` default) |
+| `GroqLLMEngine` | `core/engines/llm/groq_llm.py` | Groq API (`llama-3.1-8b-instant` default) |
 | `OpenRouterLLMEngine` | `core/engines/llm/openrouter_llm.py` | OpenRouter (free model set) |
 | `OpenAITTSEngine` | `core/engines/tts/openai_tts.py` | OpenAI TTS-1 |
 | `GTTSEngine` | `core/engines/tts/gtts_tts.py` | gTTS |
 
-All seven inherit from their respective base class. The pipeline only calls the interface methods (`transcribe`, `generate`, `synthesize`) and never imports engine classes directly.
+All eight inherit from their respective base class. The pipeline only calls the interface methods (`transcribe`, `generate`, `synthesize`) and never imports engine classes directly.
 
 ---
 
@@ -63,6 +64,13 @@ ENGINES = {
 #     "tts": "core.engines.tts.gtts_tts.GTTSEngine",
 # }
 
+# Hybrid (Groq LLM + local STT/TTS)
+# ENGINES = {
+#     "stt": "core.engines.stt.whisper_local.WhisperLocalEngine",
+#     "llm": "core.engines.llm.groq_llm.GroqLLMEngine",
+#     "tts": "core.engines.tts.gtts_tts.GTTSEngine",
+# }
+
 # OpenRouter
 # ENGINES = {
 #     "stt": "core.engines.stt.whisper_local.WhisperLocalEngine",
@@ -80,6 +88,11 @@ ENGINES = {
 `OnboardingPipeline` in `core/pipeline.py` drives the full conversation loop. Audio I/O lives here; STT, LLM, and TTS are delegated to the injected engines.
 
 ```
+0. get_opening()
+      returns OPENING_TEXT from config.py and synthesizes it via tts.synthesize()
+      opening audio is played once before the per-turn loop begins
+      the REST API and CLI both call get_opening() — behaviour is consistent across interfaces
+
 1. record_audio()
       sounddevice captures fixed-duration mono audio (default 5s, 16 kHz)
       returns numpy float32 array
@@ -204,10 +217,12 @@ All tuneable constants are defined in `config.py`:
 |---|---|---|
 | `RECORDING_DURATION` | `5` (seconds) | `OnboardingPipeline` |
 | `AUDIO_SAMPLE_RATE` | `16000` (Hz) | `OnboardingPipeline` |
-| `ENERGY_THRESHOLD` | `0.01` | `OnboardingPipeline` |
+| `ENERGY_THRESHOLD` | `0.01` | `OnboardingPipeline`, `api/main.py` |
 | `MAX_HISTORY_LENGTH` | `12` | `OnboardingPipeline` |
+| `OPENING_TEXT` | opening message string | `OnboardingPipeline.get_opening()`, `api/main.py` |
 | `TTS_VOICE` | `"alloy"` | `OpenAITTSEngine` |
 | `TTS_MODEL` | `"tts-1"` | `OpenAITTSEngine` |
+| `GROQ_MODEL` | `"llama-3.1-8b-instant"` | `GroqLLMEngine` |
 | `ONBOARDING_FIELDS` | 6-field list | `OnboardingPipeline`, `dashboard.py`, `api/main.py` |
 | `SYSTEM_PROMPT` | full prompt string | `OnboardingPipeline` |
 | `ENGINES` | dotted path dict | `main.py`, `dashboard.py`, `api/main.py` via `load_engine()` |
@@ -274,6 +289,7 @@ W26-Applied-Research-Voice-Agent/
         │       ├── llm/
         │       │   ├── openai_llm.py
         │       │   ├── ollama_llm.py
+        │       │   ├── groq_llm.py
         │       │   └── openrouter_llm.py
         │       ├── stt/
         │       │   ├── whisper_api.py

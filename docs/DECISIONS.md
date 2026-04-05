@@ -93,6 +93,12 @@ This document records the key technical decisions made throughout the project an
 
 ---
 
+## OPENING_TEXT Hardcoded in pipeline.py, Not via _generate()
+**Decision:** Play a hardcoded `OPENING_TEXT` string (defined in `config.py`) at the start of the session via `get_opening()` rather than generating the opening message through `_generate()`.
+**Reason:** `_generate()` calls the LLM, which introduces latency, non-determinism, and potential failure modes (empty response, API error) on the very first turn before any user input has been collected. The opening message is fixed ("Hi, I'm your onboarding assistant for Enabled Talent. Let's get started — what is your full name?") and does not need to vary between sessions. Hardcoding it in `config.py` and bypassing the LLM makes session start instant, deterministic, and failure-free. `get_opening()` is the single source of truth used by both the CLI runner (`pipeline.run()`) and the REST API (`/session/start`) so behaviour is consistent across interfaces.
+
+---
+
 ## Restructured Test Suite
 **Decision:** Reorganise tests into `unit/`, `integration/`, and `old/` subdirectories with a shared `conftest.py` for `sys.path` setup.
 **Reason:** All tests previously lived in a flat `tests/` directory with no separation between unit tests (no API calls, fast) and integration tests (require API keys and audio fixtures, slow). Separating them allows unit tests to run in CI without credentials and integration tests to be run explicitly. `old/` retains legacy tests for reference without polluting the active test suite.

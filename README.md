@@ -54,8 +54,8 @@ W26-Applied-Research-Voice-Agent/
         │       ├── llm/
         │       │   ├── openai_llm.py      # OpenAILLMEngine (GPT-4)
         │       │   ├── ollama_llm.py      # OllamaLLMEngine (gemma3:1b)
-        │       │   ├── groq_llm.py        # OllamaLLMEngine (gemma3:1b)
-        |       │   └── openrouter_llm.py  # OpenRouterLLMEngine (free model set)
+        │       │   ├── groq_llm.py        # GroqLLMEngine (Groq API)
+        │       │   └── openrouter_llm.py  # OpenRouterLLMEngine (free model set)
         │       ├── stt/
         │       │   ├── whisper_api.py     # WhisperAPIEngine (OpenAI Whisper-1)
         │       │   └── whisper_local.py   # WhisperLocalEngine (on-device)
@@ -69,11 +69,14 @@ W26-Applied-Research-Voice-Agent/
 tests/
     ├── conftest.py                    # sys.path setup for all tests
     ├── audio/                         # gitignored audio fixtures for integration tests
-    │   └── record_fixtures.py         # helper script to record test audio
+    │   └── test_audio.py              # helper script to record test audio
     ├── unit/
-    │   └── test_pipeline.py           # unit tests for OnboardingPipeline (no API calls)
+    │   ├── test_pipeline.py           # unit tests for OnboardingPipeline (no API calls)
+    │   ├── test_api.py                # unit tests for the REST API wrapper
+    │   └── test_openrouter.py         # unit tests for OpenRouterLLMEngine
     ├── integration/
-    │   └── test_pipeline_session.py   # integration tests with pre-recorded audio
+    │   ├── test_pipelines_sess.py     # integration tests with pre-recorded audio (pipeline)
+    │   └── test_api_sess.py           # integration tests with pre-recorded audio (API)
     └── old/                           # legacy tests kept for reference
 ```
 
