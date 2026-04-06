@@ -134,6 +134,7 @@ ENGINES = {
 #     "tts": "core.engines.tts.gtts_tts.GTTSEngine",
 # }
 
+# OpenRouter (for testing different free LLMs without code changes)
 # ENGINES = {
 #     "stt": "core.engines.stt.whisper_api.WhisperAPIEngine",
 #     "llm": "core.engines.llm.openrouter_llm.OpenRouterLLMEngine",
