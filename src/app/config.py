@@ -24,6 +24,14 @@ MAX_HISTORY_LENGTH = 12
 
 
 # ===================================================================================
+# OPENING MESSAGE FOR LLM
+# ===================================================================================
+OPENING_TEXT = (
+    "Hi, I'm your onboarding assistant for Enabled Talent. "
+    "Let's get started — what is your full name?"
+)
+
+# ===================================================================================
 # OPENAI LLM PARAMETERS
 # ===================================================================================
 LLM_MAX_TOKENS = 150
@@ -126,6 +134,7 @@ ENGINES = {
 #     "tts": "core.engines.tts.gtts_tts.GTTSEngine",
 # }
 
+# OpenRouter (for testing different free LLMs without code changes)
 # ENGINES = {
 #     "stt": "core.engines.stt.whisper_api.WhisperAPIEngine",
 #     "llm": "core.engines.llm.openrouter_llm.OpenRouterLLMEngine",

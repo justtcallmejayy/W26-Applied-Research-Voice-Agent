@@ -1,0 +1,8 @@
+{
+  "build": {
+    "builder": "NIXPACKS"
+  },
+  "deploy": {
+    "startCommand": "pip install -r requirements-api.txt && cd src && uvicorn api.main:app --host 0.0.0.0 --port $PORT"
+  }
+}

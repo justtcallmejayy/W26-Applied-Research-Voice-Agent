@@ -15,11 +15,10 @@ import numpy as np
 import sounddevice as sd
 import soundfile as sf
 from core.engines.base import STTEngine, LLMEngine, TTSEngine
-from config import MAX_HISTORY_LENGTH
+from config import MAX_HISTORY_LENGTH, OPENING_TEXT
 from utils.logger import setup_logger
 
 logger = setup_logger(__name__, log_type="pipeline")
-
 
 def load_engine(dotted_path: str) -> STTEngine | LLMEngine | TTSEngine:
     """
@@ -80,6 +79,20 @@ class OnboardingPipeline:
         self.sample_rate = sample_rate
         self.energy_threshold = energy_threshold
         self.conversation_history: list[dict] = []
+
+    def get_opening(self) -> tuple[str, str]:
+        """
+        Return the hardcoded opening text and synthesise it to a temp audio file.
+
+        This is the single source of truth for the opening message — used by
+        both the CLI runner and the REST API so behaviour is consistent.
+
+        Returns:
+            Tuple of (opening_text, audio_filepath).
+            The caller is responsible for cleaning up the audio file.
+        """
+        audio_path = self.tts.synthesize(OPENING_TEXT)
+        return OPENING_TEXT, audio_path
 
     def record_audio(self) -> np.ndarray:
         """
@@ -170,13 +183,13 @@ class OnboardingPipeline:
     def _generate(self, user_input: str) -> str:
         """
         Append user input to history, call the LLM, append the response,
-        and trim history to the last 8 messages if exceeded.
+        and trim history to MAX_HISTORY_LENGTH if exceeded.
 
         Args:
             user_input: The user's transcribed message or initial prompt.
 
         Returns:
-            The assistant's response text.
+            The assistant's response text, or empty string if LLM returns nothing.
         """
         self.conversation_history.append({"role": "user", "content": user_input})
         messages = [{"role": "system", "content": self.system_prompt}] + self.conversation_history
@@ -207,14 +220,20 @@ class OnboardingPipeline:
         """
         Run the full onboarding session.
 
-        Generates an opening message, then loops through each onboarding
+        Plays the hardcoded opening message, then loops through each onboarding
         field collecting one user response per turn. Silent or empty turns
         are skipped. Temporary audio files are cleaned up after each turn.
         """
         logger.info("Starting onboarding session...")
 
-        opening = self._generate("Begin the onboarding conversation.")
-        self._speak(opening)
+        opening_text, opening_path = self.get_opening()
+        self.play_audio(opening_path)
+        self.cleanup_file(opening_path)
+
+        self.conversation_history.append({
+            "role": "assistant",
+            "content": opening_text
+        })
 
         for turn in range(len(self.onboarding_fields)):
             current_field = self.onboarding_fields[turn]
@@ -236,7 +255,6 @@ class OnboardingPipeline:
                     logger.warning(f"Empty transcription on turn {turn + 1}, skipping...")
                     continue
 
-                # response = self._generate(user_text)
                 response = self._generate(f"[Collecting: {current_field}]\n{user_text}")
                 if not response:
                     logger.warning(f"Skipping TTS on turn {turn + 1} - empty LLM response")
@@ -247,5 +265,3 @@ class OnboardingPipeline:
                 self.cleanup_file(recorded_path)
 
         logger.info("Onboarding session complete.")
-
-

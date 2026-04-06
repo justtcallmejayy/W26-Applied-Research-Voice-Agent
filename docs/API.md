@@ -1,7 +1,5 @@
 # API
 
-# API
-
 REST API wrapper around the `OnboardingPipeline`. Exposes the voice onboarding session over HTTP so any frontend can record audio and interact with the pipeline without requiring the full Python environment.
 
 Built with FastAPI. Interactive docs available at `http://localhost:8000/docs` when running locally.
