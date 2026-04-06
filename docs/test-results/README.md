@@ -35,5 +35,6 @@ Each test report includes:
 | [2026-03-16](2026-03-16-post-migration-cloud-validation.md) | Cloud Pipeline Post-Migration Validation | No regressions after plug-and-play migration; GPT-4 holds 100% across all metrics; per-turn timing consistent with March 11 baseline |
 | [2026-03-16](2026-03-16-post-migration-local-validation.md) | Local Pipeline Post-Migration Validation | 0% completion, 100% order errors under new pipeline; history trim at turn 4 confirmed as root cause; empty LLM response crash identified (new issue) |
 | [2026-03-25](2026-03-25-openrouter-llm-integration.md) | OpenRouter Free Model Validation | Tested which free OpenRouter models actually work with our pipeline |
+| [2026-04-01](2026-04-01-groq-llm-test-validation.md) | Groq LLM Test Validation | Added deterministic unit coverage and live Groq smoke validation; both passed |
 
 ---
