@@ -102,6 +102,11 @@ def start_session():
     audio_path = pipeline.tts.synthesize(OPENING_TEXT)
     audio_bytes = read_and_cleanup(pipeline, audio_path)
 
+    pipeline.conversation_history.append({
+        "role": "assistant", 
+        "content": OPENING_TEXT
+    })
+
     logger.info(f"Session {session_id} started.")
 
     return Response(

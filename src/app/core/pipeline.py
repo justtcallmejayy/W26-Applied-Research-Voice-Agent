@@ -230,6 +230,11 @@ class OnboardingPipeline:
         self.play_audio(opening_path)
         self.cleanup_file(opening_path)
 
+        self.conversation_history.append({
+            "role": "assistant",
+            "content": opening_text
+        })
+
         for turn in range(len(self.onboarding_fields)):
             current_field = self.onboarding_fields[turn]
             logger.info(f"Starting turn {turn + 1} of {len(self.onboarding_fields)} — collecting: {current_field}")

@@ -11,7 +11,8 @@ from api.main import app
 
 client = TestClient(app)
 
-def test_full_api_session():
+@pytest.mark.parametrize("run_number", range(10))
+def test_full_api_session(run_number):
 
     # Start the session
     response = client.post("/session/start")
