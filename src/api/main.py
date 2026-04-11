@@ -36,6 +36,7 @@ logger = setup_logger(__name__, log_type="api")
 
 def safe_header(text: str) -> str:
     """Strip non-latin-1 and illegal header characters from text."""
+    text = text.strip()
     text = text.replace("\n", " ").replace("\r", " ")
     return text.encode("latin-1", errors="ignore").decode("latin-1")
 
