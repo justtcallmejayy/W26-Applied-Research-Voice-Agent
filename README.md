@@ -157,6 +157,8 @@ FFmpeg is required for local Whisper transcription.
 | Document | Description |
 |----------|-------------|
 | [Architecture](docs/ARCHITECTURE.md) | System design, pipeline, API, and component overview |
+| [API](docs/API.md) | REST API endpoint reference, usage examples, and curl commands |
 | [Decisions](docs/DECISIONS.md) | Key technical decisions and reasoning |
 | [Setup](docs/SETUP.md) | Detailed setup, configuration, and troubleshooting |
+| [Handoff](docs/HANDOFF.md) | Client handoff document covering deliverables, setup, engine configuration, and next steps |
 | [Test Results](docs/test-results/README.md) | All test reports and current performance metrics |
