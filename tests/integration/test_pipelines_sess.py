@@ -9,15 +9,15 @@ import pytest
 from src.app.core.pipeline import OnboardingPipeline
 from src.app.config import SYSTEM_PROMPT, ONBOARDING_FIELDS
 
-from src.app.core.engines.llm.openrouter_llm import OpenRouterLLMEngine
-from src.app.core.engines.tts.gtts_tts import GTTSEngine
-from src.app.core.engines.stt.whisper_local import WhisperLocalEngine
+from src.app.core.engines.llm.openai_llm import OpenAILLMEngine
+from src.app.core.engines.tts.openai_tts import OpenAITTSEngine
+from src.app.core.engines.stt.whisper_api import WhisperAPIEngine
 
 def test_full_session_with_prerecorded_audio():
     """Run a full onboarding session using pre-recorded audio files."""
-    stt = WhisperLocalEngine()
-    llm = OpenRouterLLMEngine()
-    tts = GTTSEngine()
+    stt = WhisperAPIEngine()
+    llm = OpenAILLMEngine()
+    tts = OpenAITTSEngine()
 
     pipeline = OnboardingPipeline(
         stt=stt,

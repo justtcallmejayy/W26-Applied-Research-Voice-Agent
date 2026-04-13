@@ -22,7 +22,8 @@ from config import (
     RECORDING_DURATION,
     AUDIO_SAMPLE_RATE,
     ENERGY_THRESHOLD,
-    ENGINES
+    ENGINES,
+    OPENING_TEXT
 )
 from core.pipeline import load_engine, OnboardingPipeline
 
@@ -48,7 +49,6 @@ def init_state():
 
 init_state()
 
-
 class DashboardLogHandler(logging.Handler):
     """Captures log messages from the entire app into session state for display."""
     def emit(self, record):
@@ -61,7 +61,6 @@ class DashboardLogHandler(logging.Handler):
         except Exception:
             self.handleError(record)
 
-
 if not st.session_state.log_handler_attached:
     root_logger = logging.getLogger()
     dash_handler = DashboardLogHandler()
@@ -70,7 +69,6 @@ if not st.session_state.log_handler_attached:
     root_logger.setLevel(logging.INFO)
     st.session_state.log_handler_attached = True
     logging.info("Dashboard log handler attached.")
-
 
 def build_pipeline(recording_duration: int, sample_rate: int) -> OnboardingPipeline:
     """Instantiate the OnboardingPipeline using engines defined in config.py."""
@@ -87,7 +85,6 @@ def build_pipeline(recording_duration: int, sample_rate: int) -> OnboardingPipel
         sample_rate=sample_rate,
         energy_threshold=ENERGY_THRESHOLD,
     )
-
 
 st.title("Voice Agent Onboarding Dashboard")
 main_col, debug_col = st.columns([3, 2])
@@ -147,9 +144,12 @@ with st.sidebar:
                     "energy_threshold": ENERGY_THRESHOLD,
                 }
 
-                opening = pipeline._generate("Begin the onboarding conversation.")
-                pipeline._speak(opening)
-                st.session_state.last_response = opening
+                pipeline._speak(OPENING_TEXT)
+                pipeline.conversation_history.append({
+                    "role": "assistant",
+                    "content": OPENING_TEXT,
+                })
+                st.session_state.last_response = OPENING_TEXT
 
             except Exception as e:
                 st.session_state.error = str(e)
@@ -162,7 +162,6 @@ with st.sidebar:
             st.session_state.pipeline = None
             st.session_state.status = "idle"
             st.rerun()
-
 
 # ==========================================
 # MAIN CONVERSATION PANEL
@@ -257,7 +256,6 @@ with main_col:
             st.session_state.error = None
             st.rerun()
 
-
 # ==========================================
 # DEBUG PANEL
 # ==========================================
@@ -294,4 +292,3 @@ with debug_col:
             st.code("\n".join(log_lines), language=None)
         else:
             st.caption("Waiting for logs... (Interaction required)")
-
